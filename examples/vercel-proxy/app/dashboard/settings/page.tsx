@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 
 type ApprovalMethod = "device_authorization" | "ciba";
 
@@ -13,6 +14,9 @@ interface Settings {
 }
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const setupPasskey = searchParams.get("setup_passkey") === "true";
+  const returnTo = searchParams.get("return_to");
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -193,6 +197,15 @@ export default function SettingsPage() {
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
             Proof of Presence (WebAuthn)
           </h2>
+          {setupPasskey && (
+            <div className="rounded-lg border border-white/20 bg-white/5 px-4 py-4">
+              <p className="text-sm font-medium text-white">Passkey required</p>
+              <p className="mt-1 text-xs text-muted">
+                The capabilities you&apos;re approving require biometric verification. Register a
+                passkey below, then you&apos;ll be redirected back to complete the approval.
+              </p>
+            </div>
+          )}
           <div className="rounded-lg border border-border bg-surface">
             <div className="flex items-center justify-between border-b border-border px-4 py-4">
               <div className="flex-1 pr-4">
@@ -231,7 +244,9 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {settings.webauthnEnabled && <PasskeyManager />}
+            {(settings.webauthnEnabled || setupPasskey) && (
+              <PasskeyManager returnTo={returnTo} />
+            )}
           </div>
         </div>
 
@@ -243,7 +258,7 @@ export default function SettingsPage() {
   );
 }
 
-function PasskeyManager() {
+function PasskeyManager({ returnTo }: { returnTo?: string | null }) {
   const [passkeys, setPasskeys] = useState<
     { id: string; name?: string | null; createdAt?: string }[]
   >([]);
@@ -280,6 +295,9 @@ function PasskeyManager() {
         setError(res.error.message ?? "Registration failed");
       } else {
         await fetchPasskeys();
+        if (returnTo) {
+          window.location.href = returnTo;
+        }
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Passkey registration cancelled or failed";

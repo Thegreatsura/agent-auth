@@ -901,7 +901,7 @@ export const auth = betterAuth({
         }
       },
       proofOfPresence: {
-        enabled: true,
+        enabled: false,
       },
       onEvent: (event) => {
         const { type, actorId, actorType, agentId, hostId, orgId, ...rest } =

@@ -175,10 +175,10 @@ export default function DeviceCapabilities({ agentId, code }: { agentId?: string
       }
 
       if (errorCode === "webauthn_not_enrolled") {
-        setError(
-          "You need to register a passkey (fingerprint/face) before you can approve these capabilities. Go to your account settings to add one.",
-        );
-        setActionState("idle");
+        const returnParams = new URLSearchParams();
+        if (agentId) returnParams.set("agent_id", agentId);
+        if (code) returnParams.set("code", code);
+        window.location.href = `/dashboard/settings?setup_passkey=true&return_to=${encodeURIComponent(`/device/capabilities?${returnParams.toString()}`)}`;
         return;
       }
 
