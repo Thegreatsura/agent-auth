@@ -6,7 +6,13 @@ export { detectHostName, detectTool } from "./host-name";
 export { matchQuery, matchQueryScored } from "./search";
 export type { ScoredMatch } from "./search";
 export { AgentAuthSDKError } from "./types";
-export { getAgentAuthTools, filterTools, toOpenAITools, toAISDKTools, toAnthropicTools } from "./tools";
+export {
+  getAgentAuthTools,
+  filterTools,
+  toOpenAITools,
+  toAISDKTools,
+  toAnthropicTools,
+} from "./tools";
 export { SERVER_INSTRUCTIONS } from "./instructions";
 
 export type {

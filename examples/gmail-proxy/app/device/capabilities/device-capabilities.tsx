@@ -459,11 +459,7 @@ export default function DeviceCapabilities({ agentId, code }: { agentId?: string
           </div>
           <div>
             <h1 className="text-[22px] font-normal text-foreground">
-              {approved
-                ? result.claimed
-                  ? "Agent Claimed"
-                  : "Access Approved"
-                : "Access Denied"}
+              {approved ? (result.claimed ? "Agent Claimed" : "Access Approved") : "Access Denied"}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {approved

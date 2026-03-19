@@ -1,7 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z, type ZodRawShape } from "zod";
-import { getAgentAuthTools, filterTools, SERVER_INSTRUCTIONS, type ToolParameters } from "@auth/agent";
+import {
+  getAgentAuthTools,
+  filterTools,
+  SERVER_INSTRUCTIONS,
+  type ToolParameters,
+} from "@auth/agent";
 import { createClient, type ClientConfig } from "./client.js";
 
 interface PropertyDescriptor {

@@ -63,8 +63,7 @@ export function approveCapability(
       use: [sessionMiddleware],
       metadata: {
         openapi: {
-          description:
-            "Approve or deny a pending agent registration or capability request.",
+          description: "Approve or deny a pending agent registration or capability request.",
         },
       },
     },
@@ -123,19 +122,16 @@ export function approveCapability(
       let deviceApprovalRequests: ApprovalRequest[] = [];
       if (approvalRequest) {
         deviceApprovalRequests =
-          approvalRequest.method === "device_authorization"
-            ? [approvalRequest]
-            : [];
+          approvalRequest.method === "device_authorization" ? [approvalRequest] : [];
       } else {
-        deviceApprovalRequests =
-          await ctx.context.adapter.findMany<ApprovalRequest>({
-            model: TABLE.approval,
-            where: [
-              { field: "agentId", value: agentId },
-              { field: "status", value: "pending" },
-              { field: "method", value: "device_authorization" },
-            ],
-          });
+        deviceApprovalRequests = await ctx.context.adapter.findMany<ApprovalRequest>({
+          model: TABLE.approval,
+          where: [
+            { field: "agentId", value: agentId },
+            { field: "status", value: "pending" },
+            { field: "method", value: "device_authorization" },
+          ],
+        });
       }
 
       // Check expiry on any resolved approval request
@@ -147,41 +143,33 @@ export function approveCapability(
       }
 
       // Verify user_code for device_authorization approvals (approve only — deny is safe)
-      const hasDeviceApproval = deviceApprovalRequests.some(
-        (r) => r.userCodeHash,
-      );
+      const hasDeviceApproval = deviceApprovalRequests.some((r) => r.userCodeHash);
       if (action === "approve" && hasDeviceApproval) {
         if (!userCode) {
           throw agentError("BAD_REQUEST", ERR.INVALID_USER_CODE);
         }
         const normalized = normalizeUserCode(userCode);
         const submittedHash = await hashToken(normalized);
-        const matched = deviceApprovalRequests.some(
-          (r) => r.userCodeHash === submittedHash,
-        );
+        const matched = deviceApprovalRequests.some((r) => r.userCodeHash === submittedHash);
         if (!matched) {
           throw agentError("FORBIDDEN", ERR.INVALID_USER_CODE);
         }
       }
 
-      const allGrants =
-        await ctx.context.adapter.findMany<AgentCapabilityGrant>({
-          model: TABLE.grant,
-          where: [{ field: "agentId", value: agentId }],
-        });
+      const allGrants = await ctx.context.adapter.findMany<AgentCapabilityGrant>({
+        model: TABLE.grant,
+        where: [{ field: "agentId", value: agentId }],
+      });
 
       // ── Claim: autonomous agent ownership transfer ──
       if (isClaim) {
         const now = new Date();
 
         if (action === "deny") {
-          const resolved = await resolvePendingApprovalRequests(
-            ctx.context.adapter,
-            {
-              agentId,
-              status: "denied",
-            },
-          );
+          const resolved = await resolvePendingApprovalRequests(ctx.context.adapter, {
+            agentId,
+            status: "denied",
+          });
           void deliverApprovalNotifications(resolved, {
             agent_id: agentId,
             status: "denied",
@@ -245,9 +233,7 @@ export function approveCapability(
           );
         }
 
-        const activeCaps = allGrants
-          .filter((g) => g.status === "active")
-          .map((g) => g.capability);
+        const activeCaps = allGrants.filter((g) => g.status === "active").map((g) => g.capability);
 
         await opts.onAutonomousAgentClaimed?.({
           ctx,
@@ -258,13 +244,10 @@ export function approveCapability(
           capabilities: activeCaps,
         });
 
-        const resolved = await resolvePendingApprovalRequests(
-          ctx.context.adapter,
-          {
-            agentId,
-            status: "approved",
-          },
-        );
+        const resolved = await resolvePendingApprovalRequests(ctx.context.adapter, {
+          agentId,
+          status: "approved",
+        });
         void deliverApprovalNotifications(resolved, {
           agent_id: agentId,
           status: "approved",
@@ -286,10 +269,7 @@ export function approveCapability(
           status: "approved",
           agentId,
           claimed: true,
-          agent_capability_grants: formatGrantsResponse(
-            allGrants,
-            opts.capabilities,
-          ),
+          agent_capability_grants: formatGrantsResponse(allGrants, opts.capabilities),
         });
       }
 
@@ -298,10 +278,7 @@ export function approveCapability(
       const agentIsPending = agent.status === "pending";
 
       if (pendingGrants.length === 0 && !agentIsPending) {
-        throw agentError(
-          "PRECONDITION_FAILED",
-          ERR.CAPABILITY_REQUEST_ALREADY_RESOLVED,
-        );
+        throw agentError("PRECONDITION_FAILED", ERR.CAPABILITY_REQUEST_ALREADY_RESOLVED);
       }
 
       if (action === "deny") {
@@ -334,13 +311,10 @@ export function approveCapability(
           ? `User denied the authorization request: ${denyReason}`
           : "User denied the authorization request.";
 
-        const resolved = await resolvePendingApprovalRequests(
-          ctx.context.adapter,
-          {
-            agentId,
-            status: "denied",
-          },
-        );
+        const resolved = await resolvePendingApprovalRequests(ctx.context.adapter, {
+          agentId,
+          status: "denied",
+        });
 
         void deliverApprovalNotifications(resolved, {
           agent_id: agentId,
@@ -417,9 +391,7 @@ export function approveCapability(
         // Per-capability overrides can still escalate to webauthn
         if (!requiresWebAuthn) {
           const capDefs = opts.capabilities ?? [];
-          const capDefMap = new Map<string, Capability>(
-            capDefs.map((c) => [c.name, c]),
-          );
+          const capDefMap = new Map<string, Capability>(capDefs.map((c) => [c.name, c]));
           requiresWebAuthn = capabilities.some((capId) => {
             const def = capDefMap.get(capId);
             return def?.approvalStrength === "webauthn";
@@ -449,10 +421,7 @@ export function approveCapability(
           }
 
           if (!webauthnResponse) {
-            const { options } = await generateApprovalChallenge(
-              opts.proofOfPresence,
-              passkeys,
-            );
+            const { options } = await generateApprovalChallenge(opts.proofOfPresence, passkeys);
 
             challengeCache.set(session.user.id, agentId, options.challenge);
 
@@ -467,10 +436,7 @@ export function approveCapability(
             );
           }
 
-          const expectedChallenge = challengeCache.consume(
-            session.user.id,
-            agentId,
-          );
+          const expectedChallenge = challengeCache.consume(session.user.id, agentId);
 
           if (!expectedChallenge) {
             throw agentError(
@@ -480,11 +446,8 @@ export function approveCapability(
             );
           }
 
-          const assertionResponse =
-            webauthnResponse as unknown as AuthenticationResponseJSON;
-          const matchingPasskey = passkeys.find(
-            (pk) => pk.credentialID === assertionResponse.id,
-          );
+          const assertionResponse = webauthnResponse as unknown as AuthenticationResponseJSON;
+          const matchingPasskey = passkeys.find((pk) => pk.credentialID === assertionResponse.id);
 
           if (!matchingPasskey) {
             throw agentError(
@@ -529,10 +492,7 @@ export function approveCapability(
       }
 
       if (opts.blockedCapabilities.length > 0) {
-        const blocked = findBlockedCapabilities(
-          [...approvedCapIds],
-          opts.blockedCapabilities,
-        );
+        const blocked = findBlockedCapabilities([...approvedCapIds], opts.blockedCapabilities);
         if (blocked.length > 0) {
           throw agentError(
             "BAD_REQUEST",
@@ -542,10 +502,7 @@ export function approveCapability(
         }
       }
 
-      const activeGrantsByCapability = new Map<
-        string,
-        AgentCapabilityGrant[]
-      >();
+      const activeGrantsByCapability = new Map<string, AgentCapabilityGrant[]>();
       for (const g of allGrants) {
         if (g.status !== "active") continue;
         const list = activeGrantsByCapability.get(g.capability) ?? [];
@@ -556,8 +513,7 @@ export function approveCapability(
 
       for (const grant of pendingGrants) {
         if (approvedCapIds.has(grant.capability)) {
-          const existingActive =
-            activeGrantsByCapability.get(grant.capability) ?? [];
+          const existingActive = activeGrantsByCapability.get(grant.capability) ?? [];
           const alreadyCovered = existingActive.some((ag) =>
             constraintsCover(ag.constraints, grant.constraints),
           );
@@ -601,13 +557,10 @@ export function approveCapability(
         }
       }
 
-      const resolved = await resolvePendingApprovalRequests(
-        ctx.context.adapter,
-        {
-          agentId,
-          status: added.length > 0 || agentIsPending ? "approved" : "denied",
-        },
-      );
+      const resolved = await resolvePendingApprovalRequests(ctx.context.adapter, {
+        agentId,
+        status: added.length > 0 || agentIsPending ? "approved" : "denied",
+      });
 
       void deliverApprovalNotifications(resolved, {
         agent_id: agentId,

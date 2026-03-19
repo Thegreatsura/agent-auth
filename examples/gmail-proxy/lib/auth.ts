@@ -569,8 +569,9 @@ export const auth = betterAuth({
     agentAuth({
       allowDynamicHostRegistration: true,
       freshSessionWindow: async ({ ctx }) => {
-        const userId = (ctx as Record<string, any>).context?.session?.user
-          ?.id as string | undefined;
+        const userId = (ctx as Record<string, any>).context?.session?.user?.id as
+          | string
+          | undefined;
         if (!userId) return 300;
         if ((await getSetting(userId, "freshSessionEnabled")) !== "true") return 0;
         return parseInt((await getSetting(userId, "freshSessionWindow")) ?? "300", 10);

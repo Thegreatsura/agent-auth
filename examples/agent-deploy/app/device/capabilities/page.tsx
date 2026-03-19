@@ -240,8 +240,12 @@ function DeviceCapabilitiesContent() {
                 className="w-full py-2 text-[13px] font-medium rounded-md bg-foreground text-background hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98]"
               >
                 {signingIn
-                  ? isSignUp ? "Creating account..." : "Signing in..."
-                  : isSignUp ? "Create Account & Review" : "Sign In & Review"}
+                  ? isSignUp
+                    ? "Creating account..."
+                    : "Signing in..."
+                  : isSignUp
+                    ? "Create Account & Review"
+                    : "Sign In & Review"}
               </button>
             </form>
 

@@ -421,11 +421,7 @@ export default function DeviceCapabilities({ agentId, code }: { agentId?: string
           </div>
           <div>
             <h1 className="text-xl font-semibold text-white">
-              {approved
-                ? result.claimed
-                  ? "Agent Claimed"
-                  : "Access Approved"
-                : "Access Denied"}
+              {approved ? (result.claimed ? "Agent Claimed" : "Access Approved") : "Access Denied"}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {approved
@@ -530,9 +526,7 @@ export default function DeviceCapabilities({ agentId, code }: { agentId?: string
                 </div>
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    isClaim
-                      ? "bg-blue-500/10 text-blue-400"
-                      : "bg-amber-500/10 text-amber-400"
+                    isClaim ? "bg-blue-500/10 text-blue-400" : "bg-amber-500/10 text-amber-400"
                   }`}
                 >
                   {isClaim ? "Autonomous" : "Pending"}
