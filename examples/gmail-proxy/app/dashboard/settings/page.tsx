@@ -13,6 +13,13 @@ interface Settings {
   webauthnEnabled: boolean;
 }
 
+const DEFAULT_SETTINGS: Settings = {
+  freshSessionEnabled: false,
+  freshSessionWindow: 300,
+  preferredApprovalMethod: "ciba",
+  webauthnEnabled: false,
+};
+
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -21,12 +28,25 @@ export default function SettingsPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/settings")
-      .then((r) => r.json())
-      .then(setSettings)
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load settings (${r.status})`);
+        return r.json();
+      })
+      .then((data) => {
+        if (data && !data.error) {
+          setSettings(data);
+        } else {
+          setSettings(DEFAULT_SETTINGS);
+        }
+      })
+      .catch((err) => {
+        setLoadError(err instanceof Error ? err.message : "Failed to load settings");
+        setSettings(DEFAULT_SETTINGS);
+      });
   }, []);
 
   const save = async (patch: Partial<Settings>) => {
@@ -63,6 +83,11 @@ export default function SettingsPage() {
           <p className="mt-1 text-sm text-muted">
             Configure security and approval settings for Agent Auth.
           </p>
+          {loadError && (
+            <p className="mt-2 text-xs text-red-500">
+              {loadError}. Showing defaults &mdash; changes will be saved normally.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
