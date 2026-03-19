@@ -173,7 +173,7 @@ export default function SiteDetailPage({ params }: { params: Promise<{ id: strin
           <iframe
             srcDoc={html}
             className="w-full h-[600px] border-0 bg-white"
-            sandbox="allow-scripts"
+            sandbox=""
             title="Site Preview"
           />
         </div>

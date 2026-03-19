@@ -32,10 +32,16 @@ export async function POST(request: Request) {
   if (!body.name || !body.html) {
     return NextResponse.json({ error: "name and html are required" }, { status: 400 });
   }
+  const name = String(body.name).slice(0, 200);
+  const html = String(body.html);
+  const description = body.description ? String(body.description).slice(0, 1000) : undefined;
+  if (html.length > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: "HTML content exceeds 5 MB limit" }, { status: 400 });
+  }
   const site = await createSite({
-    name: body.name,
-    html: body.html,
-    description: body.description,
+    name,
+    html,
+    description,
     userId: session.user.id,
   });
   return NextResponse.json(site, { status: 201 });

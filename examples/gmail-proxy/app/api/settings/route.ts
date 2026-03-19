@@ -17,13 +17,17 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.isAnonymous) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
+  const userId = session.user.id;
   const [freshSessionEnabled, freshSessionWindow, preferredApprovalMethod, webauthnEnabled] =
     await Promise.all([
-      getSetting("freshSessionEnabled"),
-      getSetting("freshSessionWindow"),
-      getSetting("preferredApprovalMethod"),
-      getSetting("webauthnEnabled"),
+      getSetting(userId, "freshSessionEnabled"),
+      getSetting(userId, "freshSessionWindow"),
+      getSetting(userId, "preferredApprovalMethod"),
+      getSetting(userId, "webauthnEnabled"),
     ]);
 
   return NextResponse.json({
@@ -41,12 +45,16 @@ export async function PUT(req: Request) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.isAnonymous) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
+  const userId = session.user.id;
   const body = await req.json();
 
   for (const key of ALLOWED_KEYS) {
     if (key in body) {
-      await setSetting(key, String(body[key]));
+      await setSetting(userId, key, String(body[key]));
     }
   }
 

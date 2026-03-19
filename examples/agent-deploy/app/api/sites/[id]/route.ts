@@ -23,12 +23,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const { id } = await params;
   const body = await request.json();
+  const name = body.name ? String(body.name).slice(0, 200) : undefined;
+  const html = body.html ? String(body.html) : undefined;
+  const description = body.description ? String(body.description).slice(0, 1000) : undefined;
+  if (html && html.length > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: "HTML content exceeds 5 MB limit" }, { status: 400 });
+  }
   const site = await updateSite({
     id,
     userId: session.user.id,
-    name: body.name,
-    html: body.html,
-    description: body.description,
+    name,
+    html,
+    description,
   });
   if (!site) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

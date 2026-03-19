@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, boolean, integer, serial, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  serial,
+  index,
+  primaryKey,
+} from "drizzle-orm/pg-core";
 
 // ── Better Auth core tables ──────────────────────────────────────────
 
@@ -268,7 +277,14 @@ export const eventLog = pgTable(
   ],
 );
 
-export const settings = pgTable("settings", {
-  key: text("key").primaryKey(),
-  value: text("value").notNull(),
-});
+export const settings = pgTable(
+  "settings",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.key] })],
+);

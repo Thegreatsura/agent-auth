@@ -70,7 +70,7 @@ export async function GET(req: Request) {
   const needsActivation =
     agentRow.status === "pending" || (host && host.status === "pending") || isClaim;
 
-  const webauthnEnabled = (await getSetting("webauthnEnabled")) === "true";
+  const webauthnEnabled = (await getSetting(session.user.id, "webauthnEnabled")) === "true";
 
   let hasPasskeys = 0;
   if (webauthnEnabled) {

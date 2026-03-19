@@ -18,6 +18,11 @@ export async function GET(
   }
 
   return new NextResponse(site.html, {
-    headers: { "content-type": "text/html; charset=utf-8" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "content-security-policy": "sandbox allow-scripts",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+    },
   });
 }

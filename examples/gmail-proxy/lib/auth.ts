@@ -6,9 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth, anonymous } from "better-auth/plugins";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
-import { getSetting, getSettingSync, ensureSettings, insertLog } from "./db";
-
-await ensureSettings();
+import { getSetting, insertLog } from "./db";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET as string;
@@ -402,6 +400,10 @@ const READ_ONLY_CAPABILITIES = [
   "gmail.profile",
 ];
 
+function sanitizeMimeHeader(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").trim();
+}
+
 function buildMimeMessage(args: {
   to: string;
   subject: string;
@@ -414,11 +416,11 @@ function buildMimeMessage(args: {
   const boundary = `boundary_${Date.now()}`;
   const lines: string[] = [];
 
-  lines.push(`To: ${args.to}`);
-  if (args.cc) lines.push(`Cc: ${args.cc}`);
-  if (args.bcc) lines.push(`Bcc: ${args.bcc}`);
-  lines.push(`Subject: ${args.subject}`);
-  if (args.inReplyTo) lines.push(`In-Reply-To: ${args.inReplyTo}`);
+  lines.push(`To: ${sanitizeMimeHeader(args.to)}`);
+  if (args.cc) lines.push(`Cc: ${sanitizeMimeHeader(args.cc)}`);
+  if (args.bcc) lines.push(`Bcc: ${sanitizeMimeHeader(args.bcc)}`);
+  lines.push(`Subject: ${sanitizeMimeHeader(args.subject)}`);
+  if (args.inReplyTo) lines.push(`In-Reply-To: ${sanitizeMimeHeader(args.inReplyTo)}`);
   lines.push("MIME-Version: 1.0");
 
   if (args.htmlBody) {
@@ -566,9 +568,12 @@ export const auth = betterAuth({
     }),
     agentAuth({
       allowDynamicHostRegistration: true,
-      freshSessionWindow: async () => {
-        if ((await getSetting("freshSessionEnabled")) !== "true") return 0;
-        return parseInt((await getSetting("freshSessionWindow")) ?? "300", 10);
+      freshSessionWindow: async ({ ctx }) => {
+        const userId = (ctx as Record<string, any>).context?.session?.user
+          ?.id as string | undefined;
+        if (!userId) return 300;
+        if ((await getSetting(userId, "freshSessionEnabled")) !== "true") return 0;
+        return parseInt((await getSetting(userId, "freshSessionWindow")) ?? "300", 10);
       },
       capabilities,
       defaultHostCapabilities: READ_ONLY_CAPABILITIES,
@@ -577,9 +582,11 @@ export const auth = betterAuth({
         "Gmail is Google's email service with over 1.8 billion users. This proxy provides AI agents with secure access to read, send, and manage emails, threads, labels, and drafts through the Gmail API.",
       modes: ["delegated"],
       approvalMethods: ["ciba", "device_authorization"],
-      resolveApprovalMethod: async ({ preferredMethod, supportedMethods }) => {
-        const serverPreferred = (await getSetting("preferredApprovalMethod")) ?? "ciba";
-        const method = preferredMethod ?? serverPreferred;
+      resolveApprovalMethod: async ({ preferredMethod, supportedMethods, userId }) => {
+        const userPreferred = userId
+          ? ((await getSetting(userId, "preferredApprovalMethod")) ?? "ciba")
+          : "ciba";
+        const method = preferredMethod ?? userPreferred;
         return supportedMethods.includes(method) ? method : "ciba";
       },
       onExecute: async ({ ctx, capability, arguments: args, agentSession }) => {
@@ -888,7 +895,7 @@ export const auth = betterAuth({
         }
       },
       proofOfPresence: {
-        enabled: getSettingSync("webauthnEnabled") === "true",
+        enabled: true,
       },
       onEvent: (event) => {
         const { type, actorId, actorType, agentId, hostId, orgId, ...rest } =

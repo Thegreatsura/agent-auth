@@ -370,7 +370,7 @@ function CapabilityRow({ grant }: { grant: GrantData }) {
 export default function AgentsPage() {
   const [agents, setAgents] = useState<AgentData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("active");
+  const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Record<string, "details" | "activity">>({});
   const [revoking, setRevoking] = useState<string | null>(null);

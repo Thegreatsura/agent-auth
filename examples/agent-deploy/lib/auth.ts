@@ -15,6 +15,10 @@ import {
   insertLog,
 } from "./db";
 
+const MAX_HTML_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_NAME_LENGTH = 200;
+const MAX_DESC_LENGTH = 1000;
+
 const capabilities: Capability[] = [
   {
     name: "sites.list",
@@ -245,10 +249,16 @@ export const auth = betterAuth({
             if (!args?.name || !args?.html) {
               throw new Error("Missing required arguments: name, html");
             }
+            const html = String(args.html);
+            if (html.length > MAX_HTML_SIZE) {
+              throw new Error(`HTML content exceeds ${MAX_HTML_SIZE / 1024 / 1024} MB limit`);
+            }
             const site = await createSite({
-              name: String(args.name),
-              html: String(args.html),
-              description: args.description ? String(args.description) : undefined,
+              name: String(args.name).slice(0, MAX_NAME_LENGTH),
+              html,
+              description: args.description
+                ? String(args.description).slice(0, MAX_DESC_LENGTH)
+                : undefined,
               userId,
             });
             return {
@@ -262,12 +272,18 @@ export const auth = betterAuth({
 
           case "sites.update": {
             if (!args?.id) throw new Error("Missing required argument: id");
+            const updateHtml = args.html ? String(args.html) : undefined;
+            if (updateHtml && updateHtml.length > MAX_HTML_SIZE) {
+              throw new Error(`HTML content exceeds ${MAX_HTML_SIZE / 1024 / 1024} MB limit`);
+            }
             const updated = await updateSite({
               id: String(args.id),
               userId,
-              name: args.name ? String(args.name) : undefined,
-              html: args.html ? String(args.html) : undefined,
-              description: args.description ? String(args.description) : undefined,
+              name: args.name ? String(args.name).slice(0, MAX_NAME_LENGTH) : undefined,
+              html: updateHtml,
+              description: args.description
+                ? String(args.description).slice(0, MAX_DESC_LENGTH)
+                : undefined,
             });
             if (!updated) throw new Error("Site not found or not owned by user");
             return {
