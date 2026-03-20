@@ -70,7 +70,7 @@ export function createAgentAuthBeforeHook(
 
   return {
     matcher: (ctx: { path?: string; headers?: Headers }) => {
-      if (!ctx.path || ctx.path === "/agent/register") return false;
+      if (!ctx.path || ctx.path === "/agent/register" || ctx.path === "/agent/claim") return false;
       const auth = ctx.headers?.get("authorization");
       if (!auth) return false;
       const bearer = auth.replace(/^Bearer\s+/i, "");

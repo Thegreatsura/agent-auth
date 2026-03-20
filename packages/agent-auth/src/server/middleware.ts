@@ -69,7 +69,7 @@ async function resolveSessionUser(args: {
 const OPTIONAL_AUTH_PATHS = new Set(["/capability/list", "/capability/describe"]);
 
 export function shouldRunMiddleware(path: string, headers: Headers): boolean {
-  if (path === "/agent/register") return false;
+  if (path === "/agent/register" || path === "/agent/claim") return false;
   const auth = headers.get("authorization");
   if (!auth) return false;
   const bearer = auth.replace(/^Bearer\s+/i, "");

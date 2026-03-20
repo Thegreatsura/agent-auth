@@ -1,29 +1,51 @@
 import { createAuthEndpoint } from "@better-auth/core/api";
+import { APIError } from "@better-auth/core/error";
+import { decodeJwt, decodeProtectedHeader } from "jose";
 import * as z from "zod";
-import { TABLE } from "../constants";
+import { TABLE, CLOCK_SKEW_TOLERANCE_SEC } from "../constants";
 import { agentError, AGENT_AUTH_ERROR_CODES as ERR } from "../errors";
 import { emit } from "../emit";
 import { sanitizeDisplayText, DISPLAY_LIMITS } from "../utils/sanitize";
+import { verifyJWT } from "../utils/crypto";
+import type { JtiCacheStore } from "../utils/jti-cache";
+import type { JwksCacheStore } from "../utils/jwks-cache";
+import { MemoryJwksCache } from "../utils/jwks-cache";
 import type {
   Agent,
   AgentCapabilityGrant,
   AgentHost,
-  HostSession,
+  AgentJWK,
   ResolvedAgentAuthOptions,
 } from "../types";
-import { buildApprovalInfo, formatGrantsResponse } from "./_helpers";
+import {
+  buildApprovalInfo,
+  findHostByKey,
+  formatGrantsResponse,
+  isDynamicHostAllowed,
+  resolveDefaultHostCapabilities,
+  validateKeyAlgorithm,
+  verifyAudience,
+} from "./_helpers";
 
 /**
  * POST /agent/claim
  *
- * Initiate a claim on an autonomous agent. The calling host must be
- * authenticated via host JWT (set by the middleware).
+ * Initiate a claim on an autonomous agent. Authenticates the calling
+ * host via its host JWT inline (not via the global middleware) so that
+ * brand-new SDK instances whose host has never been registered can
+ * dynamically create a host record — matching the /agent/register flow.
  *
  * Creates an approval request for the target autonomous agent.
  * When the user approves, `approve-capability` transfers ownership
  * of the agent and its host to the approving user.
  */
-export function claimAgent(opts: ResolvedAgentAuthOptions) {
+export function claimAgent(
+  opts: ResolvedAgentAuthOptions,
+  jtiCache?: JtiCacheStore,
+  jwksCache?: JwksCacheStore,
+) {
+  const cache = jwksCache ?? new MemoryJwksCache();
+
   return createAuthEndpoint(
     "/agent/claim",
     {
@@ -44,13 +66,187 @@ export function claimAgent(opts: ResolvedAgentAuthOptions) {
       },
     },
     async (ctx) => {
-      const hostSession = (ctx.context as Record<string, unknown>).hostSession as
-        | HostSession
-        | undefined;
+      // ── Authenticate host JWT inline (same pattern as /agent/register) ──
 
-      if (!hostSession) {
-        throw agentError("UNAUTHORIZED", ERR.UNAUTHORIZED_SESSION);
+      const authHeader = ctx.headers?.get("authorization");
+      const bearerToken = authHeader?.replace(/^Bearer\s+/i, "");
+      const hostJWT =
+        bearerToken && bearerToken !== authHeader && bearerToken.split(".").length === 3
+          ? bearerToken
+          : null;
+
+      if (!hostJWT) {
+        throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
       }
+
+      let decoded: ReturnType<typeof decodeJwt>;
+      let header: ReturnType<typeof decodeProtectedHeader>;
+      try {
+        decoded = decodeJwt(hostJWT);
+        header = decodeProtectedHeader(hostJWT);
+      } catch {
+        throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+      }
+
+      if (header.typ !== "host+jwt") {
+        throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+      }
+
+      if (
+        !decoded.aud ||
+        !verifyAudience(decoded.aud, ctx.context.baseURL, ctx.headers, opts.trustProxy)
+      ) {
+        throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+      }
+
+      const hostIdFromJwt = typeof decoded.iss === "string" ? decoded.iss : null;
+      const hostInlinePubKey =
+        decoded.host_public_key && typeof decoded.host_public_key === "object"
+          ? (decoded.host_public_key as AgentJWK)
+          : null;
+      const hostJwksUrl =
+        decoded.host_jwks_url && typeof decoded.host_jwks_url === "string"
+          ? decoded.host_jwks_url
+          : null;
+
+      let hostRecord: AgentHost | null = null;
+
+      if (hostIdFromJwt) {
+        hostRecord = await ctx.context.adapter.findOne<AgentHost>({
+          model: TABLE.host,
+          where: [{ field: "id", value: hostIdFromJwt }],
+        });
+      }
+
+      if (hostRecord) {
+        // ── Known host ──
+        if (hostRecord.status === "revoked") {
+          throw agentError("FORBIDDEN", ERR.HOST_REVOKED);
+        }
+        if (!hostRecord.publicKey && !hostRecord.jwksUrl) {
+          throw agentError("FORBIDDEN", ERR.HOST_REVOKED);
+        }
+
+        let hostPubKey: AgentJWK;
+        if (hostRecord.jwksUrl) {
+          if (!header.kid) throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+          const key = await cache.getKeyByKid(hostRecord.jwksUrl, header.kid);
+          if (!key) throw agentError("UNAUTHORIZED", ERR.INVALID_PUBLIC_KEY);
+          hostPubKey = key;
+        } else {
+          try {
+            hostPubKey = JSON.parse(hostRecord.publicKey!) as AgentJWK;
+          } catch {
+            throw agentError("FORBIDDEN", ERR.INVALID_PUBLIC_KEY);
+          }
+        }
+
+        const payload = await verifyJWT({
+          jwt: hostJWT,
+          publicKey: hostPubKey,
+          maxAge: opts.jwtMaxAge,
+        });
+        if (!payload || payload.iss !== hostRecord.id) {
+          throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+        }
+
+        if (!opts.dangerouslySkipJtiCheck) {
+          if (!payload.jti) throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+          const jtiKey = `host:${hostRecord.id}:${payload.jti}`;
+          if (jtiCache && (await jtiCache.has(jtiKey))) {
+            throw agentError("UNAUTHORIZED", ERR.JWT_REPLAY);
+          }
+          if (jtiCache) {
+            await jtiCache.add(jtiKey, opts.jwtMaxAge + CLOCK_SKEW_TOLERANCE_SEC);
+          }
+        }
+      } else {
+        // ── Unknown host — dynamic registration ──
+        if (!(await isDynamicHostAllowed(opts, ctx))) {
+          throw agentError("FORBIDDEN", ERR.DYNAMIC_HOST_REGISTRATION_DISABLED);
+        }
+
+        let resolvedHostPubKey: AgentJWK | null = null;
+
+        if (hostJwksUrl) {
+          if (header.kid) {
+            const key = await cache.getKeyByKid(hostJwksUrl, header.kid);
+            if (key) resolvedHostPubKey = key;
+          }
+        }
+        if (!resolvedHostPubKey && hostInlinePubKey) {
+          resolvedHostPubKey = hostInlinePubKey;
+        }
+        if (!resolvedHostPubKey) {
+          throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+        }
+
+        validateKeyAlgorithm(resolvedHostPubKey, opts.allowedKeyAlgorithms);
+
+        const payload = await verifyJWT({
+          jwt: hostJWT,
+          publicKey: resolvedHostPubKey,
+          maxAge: opts.jwtMaxAge,
+        });
+        if (!payload) {
+          throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+        }
+        if (
+          !payload.aud ||
+          !verifyAudience(payload.aud, ctx.context.baseURL, ctx.headers, opts.trustProxy)
+        ) {
+          throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+        }
+
+        if (!opts.dangerouslySkipJtiCheck) {
+          if (!payload.jti) throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
+          const jtiKey = `host:${payload.iss ?? "dynamic"}:${payload.jti}`;
+          if (jtiCache && (await jtiCache.has(jtiKey))) {
+            throw agentError("UNAUTHORIZED", ERR.JWT_REPLAY);
+          }
+          if (jtiCache) {
+            await jtiCache.add(jtiKey, opts.jwtMaxAge + CLOCK_SKEW_TOLERANCE_SEC);
+          }
+        }
+
+        const existingHost = await findHostByKey(ctx.context.adapter, resolvedHostPubKey);
+        if (existingHost) {
+          hostRecord = existingHost;
+        } else {
+          const hostNow = new Date();
+          const hostKid = resolvedHostPubKey.kid ?? null;
+          const jwtHostName = typeof decoded.host_name === "string" ? decoded.host_name : null;
+          const dynCaps = await resolveDefaultHostCapabilities(opts, {
+            ctx,
+            mode: "delegated",
+            userId: null,
+            hostId: null,
+            hostName: jwtHostName,
+          });
+
+          hostRecord = await ctx.context.adapter.create<Record<string, unknown>, AgentHost>({
+            model: TABLE.host,
+            data: {
+              name: jwtHostName,
+              userId: null,
+              publicKey: JSON.stringify(resolvedHostPubKey),
+              kid: hostKid,
+              jwksUrl: hostJwksUrl,
+              enrollmentTokenHash: null,
+              enrollmentTokenExpiresAt: null,
+              defaultCapabilities: dynCaps,
+              status: "pending",
+              activatedAt: null,
+              expiresAt: null,
+              lastUsedAt: null,
+              createdAt: hostNow,
+              updatedAt: hostNow,
+            },
+          });
+        }
+      }
+
+      // ── Claim logic ──
 
       const {
         agent_id: targetAgentId,
@@ -62,8 +258,6 @@ export function claimAgent(opts: ResolvedAgentAuthOptions) {
       const bindingMessage = rawBindingMessage
         ? sanitizeDisplayText(rawBindingMessage, DISPLAY_LIMITS.bindingMessage)
         : undefined;
-
-      // ── Find and validate the target autonomous agent ──
 
       const targetAgent = await ctx.context.adapter.findOne<Agent>({
         model: TABLE.agent,

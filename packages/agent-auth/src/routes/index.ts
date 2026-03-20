@@ -73,6 +73,6 @@ export function createAgentRoutes(
     cibaAuthorize: cibaAuthorize(opts), // §9.2
     cibaPending: cibaPending(), // §9.2
     deviceCode: deviceCode(opts), // RFC 8628 §3.1–3.2
-    claimAgent: claimAgent(opts), // §3.4 — claim autonomous agent
+    claimAgent: claimAgent(opts, jtiCache, jwksCache), // §3.4 — claim autonomous agent
   } as const;
 }
