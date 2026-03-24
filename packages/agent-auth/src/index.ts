@@ -160,6 +160,7 @@ export const agentAuth = (options?: AgentAuthOptions) => {
       agentStatus: routes.agentStatus,
       introspect: routes.introspect,
       grantCapability: routes.grantCapability,
+      revokeCapability: routes.revokeCapability,
       createHost: routes.createHost,
       enrollHost: routes.enrollHost,
       listHosts: routes.listHosts,
