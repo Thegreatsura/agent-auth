@@ -70,6 +70,7 @@ export function updateAgent(opts: ResolvedAgentAuthOptions) {
         opts,
         {
           type: "agent.updated",
+          orgId: agent.organizationId ?? undefined,
           actorId: session.user.id,
           agentId,
           metadata: { name, metadata },

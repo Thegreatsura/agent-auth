@@ -180,6 +180,7 @@ export function approveCapability(
             opts,
             {
               type: "capability.denied",
+              orgId: agent.organizationId ?? undefined,
               actorId: session.user.id,
               agentId,
               metadata: { claim: true },
@@ -225,6 +226,7 @@ export function approveCapability(
             opts,
             {
               type: "host.claimed",
+              orgId: agent.organizationId ?? undefined,
               actorId: session.user.id,
               hostId: targetHost.id,
               metadata: { previousUserId: null, viaClaim: true },
@@ -257,6 +259,7 @@ export function approveCapability(
           opts,
           {
             type: "agent.claimed",
+            orgId: agent.organizationId ?? undefined,
             actorId: session.user.id,
             agentId,
             hostId: agent.hostId,
@@ -327,6 +330,7 @@ export function approveCapability(
           opts,
           {
             type: "capability.denied",
+            orgId: agent.organizationId ?? undefined,
             actorId: session.user.id,
             agentId,
             metadata: {
@@ -577,6 +581,7 @@ export function approveCapability(
         opts,
         {
           type: "capability.approved",
+          orgId: agent.organizationId ?? undefined,
           actorId: session.user.id,
           agentId,
           metadata: {

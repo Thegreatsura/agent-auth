@@ -599,12 +599,22 @@ export function register(
           ? new Date(now.getTime() + opts.agentSessionTTL * 1000)
           : null;
 
+      const organizationId = opts.resolveOrganizationId
+        ? await opts.resolveOrganizationId({
+            userId: agentUserId ?? null,
+            hostId,
+            agentName: name,
+            mode,
+          })
+        : null;
+
       const agent = await ctx.context.adapter.create<Record<string, unknown>, Agent>({
         model: TABLE.agent,
         data: {
           name,
           userId: agentUserId ?? null,
           hostId,
+          organizationId: organizationId ?? null,
           status: agentStatus,
           mode,
           publicKey: publicKey ? JSON.stringify(publicKey) : "",
@@ -682,6 +692,7 @@ export function register(
         opts,
         {
           type: "agent.created",
+          orgId: agent.organizationId ?? undefined,
           actorId: agentUserId ?? undefined,
           agentId: agent.id,
           hostId: hostId ?? undefined,

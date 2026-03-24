@@ -261,6 +261,7 @@ export function requestCapability(opts: ResolvedAgentAuthOptions) {
             opts,
             {
               type: "capability.granted",
+              orgId: agentSession.agent.organizationId ?? undefined,
               actorType: "system",
               agentId: agentSession.agent.id,
               hostId: agentSession.agent.hostId,
@@ -333,6 +334,7 @@ export function requestCapability(opts: ResolvedAgentAuthOptions) {
         opts,
         {
           type: "capability.requested",
+          orgId: agentSession.agent.organizationId ?? undefined,
           actorType: "agent",
           actorId: agentSession.host?.userId ?? undefined,
           agentId: agentSession.agent.id,

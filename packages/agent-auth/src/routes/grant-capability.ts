@@ -148,6 +148,7 @@ export function grantCapability(opts: ResolvedAgentAuthOptions) {
         opts,
         {
           type: "capability.granted",
+          orgId: agent.organizationId ?? undefined,
           actorId: session.user.id,
           agentId,
           metadata: { capabilities: added },

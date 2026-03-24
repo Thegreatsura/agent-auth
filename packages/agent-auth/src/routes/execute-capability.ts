@@ -142,6 +142,7 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
           hostId: agentSession.agent.hostId,
           userId: agentSession.host?.userId ?? null,
           capabilityName,
+          organizationId: agentSession.agent.organizationId,
         });
       }
 
@@ -192,6 +193,7 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
           opts,
           {
             type: "capability.executed",
+            orgId: agentSession.agent.organizationId ?? undefined,
             capability: capabilityName,
             agentId: agentSession.agent.id,
             hostId: agentSession.agent.hostId,
@@ -215,6 +217,7 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
         opts,
         {
           type: "capability.executed",
+          orgId: agentSession.agent.organizationId ?? undefined,
           capability: capabilityName,
           agentId: agentSession.agent.id,
           hostId: agentSession.agent.hostId,

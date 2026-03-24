@@ -568,6 +568,7 @@ export async function claimAutonomousAgents(
       opts,
       {
         type: "agent.claimed",
+        orgId: agent.organizationId ?? undefined,
         actorId: params.userId,
         agentId: agent.id,
         hostId: params.hostId,
@@ -732,6 +733,7 @@ async function revokeAgentsForUserOnHost(
       opts,
       {
         type: "agent.revoked",
+        orgId: agent.organizationId ?? undefined,
         actorId: params.userId,
         agentId: agent.id,
         hostId: params.hostId,
@@ -799,6 +801,7 @@ export async function tryAutoGrantFromHostBudget(
     hostId: string;
     userId: string | null;
     capabilityName: string;
+    organizationId?: string | null;
   },
 ): Promise<AgentCapabilityGrant | null> {
   const host = await adapter.findOne<AgentHost>({
@@ -850,6 +853,7 @@ export async function tryAutoGrantFromHostBudget(
     opts,
     {
       type: "capability.granted",
+      orgId: params.organizationId ?? undefined,
       actorType: "system",
       agentId: params.agentId,
       hostId: params.hostId,
