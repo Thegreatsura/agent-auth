@@ -784,7 +784,7 @@ export async function resolvePendingApprovalRequests(
  * Returns the newly created grant, or `null` if auto-grant isn't possible.
  */
 export async function tryAutoGrantFromHostBudget(
-  adapter: AdapterFindOne & AdapterCreate,
+  adapter: AdapterFindOne & AdapterFindMany & AdapterCreate,
   opts: ResolvedAgentAuthOptions,
   ctx: GenericEndpointContext,
   params: {
@@ -802,6 +802,19 @@ export async function tryAutoGrantFromHostBudget(
 
   const budget = parseCapabilityIds(host.defaultCapabilities);
   if (!hasCapability(budget, params.capabilityName)) return null;
+
+  // Don't auto-grant if the capability was explicitly revoked or denied
+  const existingGrants = await adapter.findMany<AgentCapabilityGrant>({
+    model: TABLE.grant,
+    where: [
+      { field: "agentId", value: params.agentId },
+      { field: "capability", value: params.capabilityName },
+    ],
+  });
+  const hasRevokedOrDenied = existingGrants.some(
+    (g) => g.status === "revoked" || g.status === "denied",
+  );
+  if (hasRevokedOrDenied) return null;
 
   const expiresAt = await resolveGrantExpiresAt(opts, params.capabilityName, {
     agentId: params.agentId,
