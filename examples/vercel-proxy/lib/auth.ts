@@ -286,7 +286,7 @@ export const auth = betterAuth({
       providerName: "Vercel",
       providerDescription:
         "Vercel is a cloud platform for deploying and hosting frontend applications, serverless functions, and full-stack web projects with automatic CI/CD, edge networking, and seamless Git integration.",
-      modes: ["delegated", "autonomous"],
+      modes: ["delegated"],
       approvalMethods: ["ciba", "device_authorization"],
       resolveApprovalMethod: ({ preferredMethod, supportedMethods }) => {
         const serverPreferred = getSetting("preferredApprovalMethod") ?? "device_authorization";

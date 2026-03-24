@@ -1,20 +1,25 @@
 {
   "name": "agent-auth-ba",
+  "version": "0.4.3",
   "private": true,
   "license": "MIT",
   "scripts": {
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "bump": "bumpp packages/agent-auth/package.json packages/sdk/package.json packages/cli/package.json package.json",
     "test": "turbo test",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check ."
+  },
+  "dependencies": {
+    "bumpp": "^11.0.1"
   },
   "devDependencies": {
     "oxfmt": "^0.41.0",
     "turbo": "^2.5.0"
   },
   "engines": {
-    "node": "24.12.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "pnpm@10.6.2"
 }
