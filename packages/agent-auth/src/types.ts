@@ -302,8 +302,7 @@ export type AgentAuthPath =
   | "/capability/batch-execute"
   | "/agent/ciba/authorize"
   | "/agent/ciba/pending"
-  | "/agent/claim"
-  | "/agent/revoke-capability";
+  | "/agent/claim";
 
 export interface DefaultHostCapabilitiesContext {
   ctx: GenericEndpointContext;
@@ -745,7 +744,6 @@ export type AgentAuthAuditEventType =
   | "capability.approved"
   | "capability.denied"
   | "capability.granted"
-  | "capability.revoked"
   | "approval.created"
   | "approval.approved"
   | "approval.denied";

@@ -18,7 +18,6 @@ import { reactivateAgent } from "./reactivate";
 import { register } from "./register";
 import { requestCapability } from "./request-capability";
 import { revokeAgent } from "./revoke";
-import { revokeCapability } from "./revoke-capability";
 import { rotateKey } from "./rotate-key";
 import { agentStatus } from "./status";
 import { updateAgent } from "./update-agent";
@@ -54,7 +53,6 @@ export function createAgentRoutes(
     agentStatus: agentStatus(opts), // §6.5
     getAgentSession: getAgentSession(), // not in spec
     revokeAgent: revokeAgent(opts), // §6.6
-    revokeCapability: revokeCapability(opts),
     rotateKey: rotateKey(opts), // §6.7
     introspect: introspect(opts, jtiCache, jwksCache), // §6.10
     reactivateAgent: reactivateAgent(opts), // §6.12

@@ -109,20 +109,15 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
 
       let allCapabilities = opts.capabilities ?? [];
 
-      // If the static list doesn't contain all requested capabilities and
-      // resolveCapabilities is configured, resolve dynamically so batch
-      // execute works with mixed static + dynamic capabilities.
-      if (opts.resolveCapabilities) {
-        const capNames = new Set(allCapabilities.map((c) => c.name));
-        const hasMissing = requests.some((r) => !capNames.has(r.capability));
-        if (hasMissing) {
-          allCapabilities = await opts.resolveCapabilities({
-            capabilities: allCapabilities,
-            agentSession: agentSession ?? null,
-            hostSession: null,
-            query: null,
-          });
-        }
+      // If the static list is empty and resolveCapabilities is configured,
+      // resolve dynamically so batch execute works with dynamic capabilities.
+      if (allCapabilities.length === 0 && opts.resolveCapabilities) {
+        allCapabilities = await opts.resolveCapabilities({
+          capabilities: allCapabilities,
+          agentSession: agentSession ?? null,
+          hostSession: null,
+          query: null,
+        });
       }
 
       const capDefMap = new Map<string, Capability>();

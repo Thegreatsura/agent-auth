@@ -126,10 +126,6 @@ export const AGENT_AUTH_ERROR_CODES = {
     code: "capability_blocked",
     message: "One or more requested capabilities are blocked by server policy",
   },
-  DEFAULT_CAPABILITY_NOT_REVOCABLE: {
-    code: "default_capability_not_revocable",
-    message: "Default host capabilities cannot be individually revoked",
-  },
   AGENT_NOT_FOUND: {
     code: "agent_not_found",
     message: "Agent not found",

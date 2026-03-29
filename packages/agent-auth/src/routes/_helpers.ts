@@ -153,29 +153,22 @@ export async function createGrantRows(
   },
   constraintsMap?: Map<string, CapabilityConstraints>,
 ): Promise<void> {
-  const revokedCapabilities = new Set<string>();
-
   if (grantOpts?.clearExisting) {
-    const existing = await adapter.findMany<AgentCapabilityGrant>({
+    const existing = await adapter.findMany<{ id: string }>({
       model: TABLE.grant,
       where: [{ field: "agentId", value: agentId }],
     });
     for (const grant of existing) {
-      if (grant.status === "revoked" || grant.status === "denied") {
-        revokedCapabilities.add(grant.capability);
-      } else {
-        await adapter.delete({
-          model: TABLE.grant,
-          where: [{ field: "id", value: grant.id }],
-        });
-      }
+      await adapter.delete({
+        model: TABLE.grant,
+        where: [{ field: "id", value: grant.id }],
+      });
     }
   }
 
   const status = grantOpts?.status ?? "active";
   const now = new Date();
   for (const cap of capabilityIds) {
-    if (revokedCapabilities.has(cap)) continue;
     const expiresAt =
       status === "active" && ttlContext
         ? await resolveGrantExpiresAt(ttlContext.pluginOpts, cap, {
