@@ -1,6 +1,6 @@
 {
   "name": "@auth/agent",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Client SDK for the Agent Auth Protocol — agent identity, registration, and capability-based authorization",
   "license": "MIT",
   "repository": {
