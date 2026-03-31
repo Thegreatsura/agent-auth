@@ -8,6 +8,7 @@ const ALLOWED_KEYS = [
   "freshSessionWindow",
   "preferredApprovalMethod",
   "webauthnEnabled",
+  "defaultHostCapabilities",
 ] as const;
 
 export async function GET() {
@@ -24,19 +25,34 @@ export async function GET() {
   const userId = session.user.id;
 
   try {
-    const [freshSessionEnabled, freshSessionWindow, preferredApprovalMethod, webauthnEnabled] =
-      await Promise.all([
-        getSetting(userId, "freshSessionEnabled"),
-        getSetting(userId, "freshSessionWindow"),
-        getSetting(userId, "preferredApprovalMethod"),
-        getSetting(userId, "webauthnEnabled"),
-      ]);
+    const [
+      freshSessionEnabled,
+      freshSessionWindow,
+      preferredApprovalMethod,
+      webauthnEnabled,
+      defaultHostCapabilities,
+    ] = await Promise.all([
+      getSetting(userId, "freshSessionEnabled"),
+      getSetting(userId, "freshSessionWindow"),
+      getSetting(userId, "preferredApprovalMethod"),
+      getSetting(userId, "webauthnEnabled"),
+      getSetting(userId, "defaultHostCapabilities"),
+    ]);
+
+    let parsedCaps: string[] = [];
+    if (defaultHostCapabilities) {
+      try {
+        const v = JSON.parse(defaultHostCapabilities);
+        if (Array.isArray(v)) parsedCaps = v;
+      } catch {}
+    }
 
     return NextResponse.json({
       freshSessionEnabled: freshSessionEnabled === "true",
       freshSessionWindow: parseInt(freshSessionWindow ?? "300", 10),
       preferredApprovalMethod: preferredApprovalMethod ?? "ciba",
       webauthnEnabled: webauthnEnabled === "true",
+      defaultHostCapabilities: parsedCaps,
     });
   } catch {
     return NextResponse.json({
@@ -44,6 +60,7 @@ export async function GET() {
       freshSessionWindow: 300,
       preferredApprovalMethod: "ciba",
       webauthnEnabled: false,
+      defaultHostCapabilities: [],
     });
   }
 }
@@ -65,7 +82,11 @@ export async function PUT(req: Request) {
   try {
     for (const key of ALLOWED_KEYS) {
       if (key in body) {
-        await setSetting(userId, key, String(body[key]));
+        const value =
+          key === "defaultHostCapabilities" && Array.isArray(body[key])
+            ? JSON.stringify(body[key])
+            : String(body[key]);
+        await setSetting(userId, key, value);
       }
     }
     return NextResponse.json({ ok: true });

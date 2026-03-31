@@ -388,17 +388,6 @@ const capabilities: Capability[] = [
   },
 ];
 
-const READ_ONLY_CAPABILITIES = [
-  "gmail.messages.list",
-  "gmail.messages.get",
-  "gmail.threads.list",
-  "gmail.threads.get",
-  "gmail.labels.list",
-  "gmail.labels.get",
-  "gmail.drafts.list",
-  "gmail.drafts.get",
-  "gmail.profile",
-];
 
 function sanitizeMimeHeader(value: string): string {
   return value.replace(/[\r\n]+/g, " ").trim();
@@ -582,7 +571,17 @@ export const auth = betterAuth({
         return parseInt((await getSetting(userId, "freshSessionWindow")) ?? "300", 10);
       },
       capabilities,
-      defaultHostCapabilities: READ_ONLY_CAPABILITIES,
+      defaultHostCapabilities: async ({ userId }) => {
+        if (!userId) return [];
+        const stored = await getSetting(userId, "defaultHostCapabilities");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) return parsed;
+          } catch {}
+        }
+        return [];
+      },
       providerName: "Gmail",
       providerDescription:
         "Gmail is Google's email service with over 1.8 billion users. This proxy provides AI agents with secure access to read, send, and manage emails, threads, labels, and drafts through the Gmail API.",

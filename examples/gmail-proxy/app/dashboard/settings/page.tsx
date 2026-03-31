@@ -11,6 +11,7 @@ interface Settings {
   freshSessionWindow: number;
   preferredApprovalMethod: ApprovalMethod;
   webauthnEnabled: boolean;
+  defaultHostCapabilities: string[];
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: Settings = {
   freshSessionWindow: 300,
   preferredApprovalMethod: "ciba",
   webauthnEnabled: false,
+  defaultHostCapabilities: [],
 };
 
 export default function SettingsPage() {
@@ -207,6 +209,11 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        <DefaultHostCapabilitiesEditor
+          value={settings.defaultHostCapabilities}
+          onChange={(caps) => save({ defaultHostCapabilities: caps })}
+        />
+
         <div className="flex flex-col gap-3">
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
             Proof of Presence (WebAuthn)
@@ -328,6 +335,191 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DefaultHostCapabilitiesEditor({
+  value,
+  onChange,
+}: {
+  value: string[] | null;
+  onChange: (caps: string[]) => void;
+}) {
+  const [availableCaps, setAvailableCaps] = useState<
+    { name: string; description: string }[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const startEditing = async () => {
+    setEditing(true);
+    setSelected(new Set(value ?? []));
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/capability/list?limit=500");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableCaps(data.capabilities ?? []);
+      }
+    } catch {}
+    setLoading(false);
+  };
+
+  const handleSave = () => {
+    onChange([...selected]);
+    setEditing(false);
+  };
+
+  const caps = value ?? [];
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
+        Default Host Capabilities
+      </h2>
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="px-5 py-5">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-foreground">
+                Auto-granted capabilities for new hosts
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Capabilities automatically granted when a new agent host connects.
+              </p>
+            </div>
+            {!editing && (
+              <button
+                type="button"
+                onClick={startEditing}
+                className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted transition-colors hover:text-foreground hover:bg-surface"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="mt-4">
+              {loading ? (
+                <div className="flex justify-center py-6">
+                  <svg
+                    className="animate-spin h-5 w-5 text-muted"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs text-muted">
+                      {selected.size} of {availableCaps.length} selected
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelected(
+                          selected.size === availableCaps.length
+                            ? new Set()
+                            : new Set(availableCaps.map((c) => c.name)),
+                        )
+                      }
+                      className="rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-foreground"
+                    >
+                      {selected.size === availableCaps.length
+                        ? "Deselect all"
+                        : "Select all"}
+                    </button>
+                  </div>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {availableCaps.map((cap) => {
+                      const isSelected = selected.has(cap.name);
+                      return (
+                        <label
+                          key={cap.name}
+                          className={`flex items-center gap-3 rounded-xl px-3 py-2 cursor-pointer transition-colors ${
+                            isSelected
+                              ? "bg-accent/10 ring-1 ring-accent/20"
+                              : "bg-surface hover:bg-surface-hover"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              setSelected((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(cap.name)) next.delete(cap.name);
+                                else next.add(cap.name);
+                                return next;
+                              });
+                            }}
+                            className="h-3.5 w-3.5 rounded accent-gmail-blue"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <code className="text-xs font-mono text-foreground truncate block">
+                              {cap.name}
+                            </code>
+                            {cap.description && (
+                              <p className="text-[11px] text-muted truncate">
+                                {cap.description}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      className="rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(false)}
+                      className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : caps.length > 0 ? (
+            <div className="mt-3 space-y-1">
+              {caps.map((cap) => (
+                <div key={cap} className="rounded-xl bg-surface px-3 py-2">
+                  <code className="text-xs font-mono text-foreground">{cap}</code>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-muted">
+              No capabilities auto-granted. Hosts will start with no default access.
+            </p>
+          )}
         </div>
       </div>
     </div>
