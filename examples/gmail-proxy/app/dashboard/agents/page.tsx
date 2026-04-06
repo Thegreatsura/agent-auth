@@ -374,6 +374,7 @@ export default function AgentsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Record<string, "details" | "activity">>({});
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
   const [availableCaps, setAvailableCaps] = useState<{ name: string; description: string }[]>([]);
   const [selectedCaps, setSelectedCaps] = useState<Set<string>>(new Set());
@@ -459,6 +460,31 @@ export default function AgentsPage() {
     }
   };
 
+  const handleRevokeAll = async () => {
+    const activeAgents = agents.filter((a) => a.status === "active");
+    if (activeAgents.length === 0) return;
+    if (!window.confirm(`Revoke all ${activeAgents.length} active agent${activeAgents.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    setRevokingAll(true);
+    try {
+      await Promise.all(
+        activeAgents.map((a) =>
+          fetch("/api/auth/agent/revoke", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ agent_id: a.agent_id }),
+          }),
+        ),
+      );
+      setAgents((prev) =>
+        prev.map((a) => (a.status === "active" ? { ...a, status: "revoked" } : a)),
+      );
+    } catch {
+      /* ignore */
+    } finally {
+      setRevokingAll(false);
+    }
+  };
+
   const filters = ["all", "active", "pending", "expired", "revoked"];
   const filteredCount = agents.length;
 
@@ -474,6 +500,16 @@ export default function AgentsPage() {
                 : `${filteredCount} agent${filteredCount !== 1 ? "s" : ""} connected`}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            {agents.some((a) => a.status === "active") && (
+              <button
+                onClick={handleRevokeAll}
+                disabled={revokingAll}
+                className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 text-[12px] font-medium text-red-600 transition-all hover:bg-red-50 disabled:opacity-50"
+              >
+                {revokingAll ? "Revoking..." : "Revoke All"}
+              </button>
+            )}
           <div className="flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
             {filters.map((f) => (
               <button
@@ -488,6 +524,7 @@ export default function AgentsPage() {
                 {f}
               </button>
             ))}
+          </div>
           </div>
         </div>
 

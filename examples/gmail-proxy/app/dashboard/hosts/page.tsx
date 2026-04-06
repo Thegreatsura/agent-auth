@@ -65,6 +65,7 @@ export default function HostsPage() {
   const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
   const [editingHost, setEditingHost] = useState<string | null>(null);
   const [availableCaps, setAvailableCaps] = useState<{ name: string; description: string }[]>([]);
   const [selectedCaps, setSelectedCaps] = useState<Set<string>>(new Set());
@@ -137,6 +138,31 @@ export default function HostsPage() {
     }
   };
 
+  const handleRevokeAll = async () => {
+    const activeHosts = hosts.filter((h) => h.status === "active");
+    if (activeHosts.length === 0) return;
+    if (!window.confirm(`Revoke all ${activeHosts.length} active host${activeHosts.length !== 1 ? "s" : ""} and their agents? This cannot be undone.`)) return;
+    setRevokingAll(true);
+    try {
+      await Promise.all(
+        activeHosts.map((h) =>
+          fetch("/api/auth/host/revoke", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ host_id: h.id }),
+          }),
+        ),
+      );
+      setHosts((prev) =>
+        prev.map((h) => (h.status === "active" ? { ...h, status: "revoked" } : h)),
+      );
+    } catch {
+      /* ignore */
+    } finally {
+      setRevokingAll(false);
+    }
+  };
+
   const filters = ["all", "active", "pending", "pending_enrollment", "revoked"];
 
   return (
@@ -149,6 +175,16 @@ export default function HostsPage() {
               Agent host environments and their configurations.
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            {hosts.some((h) => h.status === "active") && (
+              <button
+                onClick={handleRevokeAll}
+                disabled={revokingAll}
+                className="cursor-pointer rounded-full border border-gmail-red/20 px-3 py-1.5 text-xs font-medium text-gmail-red transition-colors hover:bg-gmail-red/5 disabled:opacity-50"
+              >
+                {revokingAll ? "Revoking..." : "Revoke All"}
+              </button>
+            )}
           <div className="flex gap-0.5 rounded-full border border-border bg-white p-0.5 shadow-sm">
             {filters.map((f) => (
               <button
@@ -163,6 +199,7 @@ export default function HostsPage() {
                 {f === "pending_enrollment" ? "enrolling" : f}
               </button>
             ))}
+          </div>
           </div>
         </div>
 
