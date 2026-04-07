@@ -45,6 +45,7 @@ export async function discoverProvider(
 
 /**
  * Search a directory for providers matching an intent — §7.10.
+ * Internal: used by AgentAuthClient but not part of the public API.
  */
 export async function searchProviders(
   directoryUrl: string,
@@ -64,8 +65,7 @@ export async function searchProviders(
 
 /**
  * Search the directory and return full ProviderConfig objects.
- * The response includes complete config data (endpoints, modes, etc.)
- * which allows callers to cache and use providers immediately.
+ * Internal: used by AgentAuthClient but not part of the public API.
  */
 export async function searchDirectoryFull(
   directoryUrl: string,
@@ -137,8 +137,7 @@ function extractHostname(input: string): string | null {
 
 /**
  * Look up a provider from the directory by URL or domain.
- * Extracts the hostname, searches the directory using it as the intent,
- * then matches results by issuer hostname.
+ * Internal: used by AgentAuthClient but not part of the public API.
  */
 export async function lookupByUrl(
   directoryUrl: string,

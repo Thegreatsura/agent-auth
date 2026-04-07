@@ -1,7 +1,9 @@
 export { AgentAuthClient } from "./client";
 export { MemoryStorage } from "./storage";
+export type { KVStorageOptions, KVStore } from "./kv-storage";
+export { KVStorage } from "./kv-storage";
 export { generateKeypair, signHostJWT, signAgentJWT } from "./crypto";
-export { discoverProvider, searchProviders, searchDirectoryFull, lookupByUrl } from "./discovery";
+export { discoverProvider } from "./discovery";
 export { detectHostName, detectTool } from "./host-name";
 export { matchQuery, matchQueryScored } from "./search";
 export type { ScoredMatch } from "./search";
