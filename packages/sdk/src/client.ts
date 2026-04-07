@@ -65,12 +65,21 @@ export class AgentAuthClient {
   private readonly onApprovalStatusChange: ((status: AgentStatus) => void | Promise<void>) | null;
   private readonly approvalTimeoutMs: number;
   private readonly abortController: AbortController;
+  private readonly urls: string[] | null;
 
   constructor(opts: AgentAuthClientOptions = {}) {
     this.storage = opts.storage ?? new MemoryStorage();
     this.fetchFn = opts.fetch ?? globalThis.fetch.bind(globalThis);
-    this.directoryUrl = opts.directoryUrl ?? "https://agent-auth.directory";
-    this.allowDirectDiscovery = opts.allowDirectDiscovery ?? !this.directoryUrl;
+    const urlMode = (opts.urls?.length ?? 0) > 0;
+    this.urls = urlMode ? opts.urls! : null;
+    this.directoryUrl =
+      opts.directoryUrl !== undefined
+        ? opts.directoryUrl
+        : urlMode
+          ? null
+          : "https://agent-auth.directory";
+    this.allowDirectDiscovery =
+      opts.allowDirectDiscovery ?? (urlMode ? true : !this.directoryUrl);
     this.jwtExpirySeconds = opts.jwtExpirySeconds ?? 60;
     this.hostName = opts.hostName ?? detectHostName();
     this.onApprovalRequired = opts.onApprovalRequired ?? null;
@@ -83,6 +92,32 @@ export class AgentAuthClient {
         void this.storage.setProviderConfig(p.issuer, p);
       }
     }
+  }
+
+  /**
+   * Initialize the client — discovers any URLs passed via the `urls`
+   * option. Call this once after construction when using URL-only mode.
+   * Returns the discovered provider configs (failures are logged, not thrown).
+   */
+  async init(): Promise<ProviderConfig[]> {
+    if (!this.urls?.length) return [];
+    const results = await Promise.allSettled(
+      this.urls.map((url) => this.discoverProvider(url)),
+    );
+    const configs: ProviderConfig[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        configs.push(r.value);
+      }
+    }
+    return configs;
+  }
+
+  /**
+   * Whether the client is in URL-only mode (no directory).
+   */
+  get isUrlMode(): boolean {
+    return this.urls !== null && this.urls.length > 0;
   }
 
   /**

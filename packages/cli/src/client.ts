@@ -20,9 +20,11 @@ function openBrowser(url: string): void {
 
 export function createClient(config: ClientConfig = {}): AgentAuthClient {
   const storage = new FileStorage(config.storageDir);
+  const urlMode = (config.urls?.length ?? 0) > 0;
   return new AgentAuthClient({
     storage,
-    directoryUrl: config.directoryUrl ?? process.env.AGENT_AUTH_DIRECTORY_URL,
+    urls: config.urls,
+    directoryUrl: urlMode ? undefined : (config.directoryUrl ?? process.env.AGENT_AUTH_DIRECTORY_URL),
     hostName: config.hostName ?? process.env.AGENT_AUTH_HOST_NAME,
     providers: config.providers as any,
     onApprovalRequired(info) {

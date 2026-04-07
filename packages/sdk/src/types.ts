@@ -336,6 +336,16 @@ export interface AgentAuthClientOptions {
    */
   allowDirectDiscovery?: boolean;
   /**
+   * Provider URLs to discover at startup.
+   * When set, the directory is disabled and only these providers
+   * are available — `listProviders` returns only them,
+   * `searchProviders` is unavailable, and `search` is cache-only.
+   *
+   * Callers must await {@link AgentAuthClient.init | `init()`} after
+   * construction to complete URL discovery.
+   */
+  urls?: string[];
+  /**
    * Pre-configured providers. Skips discovery for these.
    */
   providers?: ProviderConfig[];
