@@ -388,7 +388,6 @@ const capabilities: Capability[] = [
   },
 ];
 
-
 function sanitizeMimeHeader(value: string): string {
   return value.replace(/[\r\n]+/g, " ").trim();
 }

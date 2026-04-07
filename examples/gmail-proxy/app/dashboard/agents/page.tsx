@@ -463,7 +463,12 @@ export default function AgentsPage() {
   const handleRevokeAll = async () => {
     const activeAgents = agents.filter((a) => a.status === "active");
     if (activeAgents.length === 0) return;
-    if (!window.confirm(`Revoke all ${activeAgents.length} active agent${activeAgents.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Revoke all ${activeAgents.length} active agent${activeAgents.length !== 1 ? "s" : ""}? This cannot be undone.`,
+      )
+    )
+      return;
     setRevokingAll(true);
     try {
       await Promise.all(
@@ -510,21 +515,21 @@ export default function AgentsPage() {
                 {revokingAll ? "Revoking..." : "Revoke All"}
               </button>
             )}
-          <div className="flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
-            {filters.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`cursor-pointer rounded-md px-3 py-1 text-[12px] font-medium capitalize transition-all ${
-                  filter === f
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+            <div className="flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+              {filters.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`cursor-pointer rounded-md px-3 py-1 text-[12px] font-medium capitalize transition-all ${
+                    filter === f
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

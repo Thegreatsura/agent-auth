@@ -129,7 +129,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           url: {
             type: "string",
-            description: "Service URL or domain to look up (e.g. https://api.example.com)",
+            description:
+              "Service URL or domain to look up (e.g. https://api.example.com). Do NOT append fragments (#...) to the URL.",
           },
         },
         required: ["url"],
@@ -149,7 +150,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           provider: {
             type: "string",
-            description: "Provider URL, issuer, or name",
+            description:
+              "Provider issuer URL, name, or issuer string from list_providers. Do NOT append fragments (#...) to the URL.",
           },
           query: {
             type: "string",
@@ -191,7 +193,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           provider: {
             type: "string",
-            description: "Provider URL, issuer, or name",
+            description:
+              "Provider issuer URL, name, or issuer string from list_providers. Do NOT append fragments (#...) to the URL.",
           },
           name: {
             type: "string",
@@ -225,7 +228,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           provider: {
             type: "string",
-            description: "Provider URL, issuer, or name",
+            description:
+              "Provider issuer URL, name, or issuer string from list_providers. Do NOT append fragments (#...) to the URL.",
           },
           capabilities: {
             type: "array",
@@ -606,7 +610,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           provider: {
             type: "string",
-            description: "Provider URL, issuer, or name",
+            description:
+              "Provider issuer URL, name, or issuer string from list_providers. Do NOT append fragments (#...) to the URL.",
           },
           enrollment_token: {
             type: "string",
@@ -638,7 +643,8 @@ export function getAgentAuthTools(client: AgentAuthClient): AgentAuthTool[] {
         properties: {
           provider: {
             type: "string",
-            description: "Provider URL, issuer, or name",
+            description:
+              "Provider issuer URL, name, or issuer string from list_providers. Do NOT append fragments (#...) to the URL.",
           },
           agent_id: {
             type: "string",

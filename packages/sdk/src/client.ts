@@ -78,8 +78,7 @@ export class AgentAuthClient {
         : urlMode
           ? null
           : "https://agent-auth.directory";
-    this.allowDirectDiscovery =
-      opts.allowDirectDiscovery ?? (urlMode ? true : !this.directoryUrl);
+    this.allowDirectDiscovery = opts.allowDirectDiscovery ?? (urlMode ? true : !this.directoryUrl);
     this.jwtExpirySeconds = opts.jwtExpirySeconds ?? 60;
     this.hostName = opts.hostName ?? detectHostName();
     this.onApprovalRequired = opts.onApprovalRequired ?? null;
@@ -101,9 +100,7 @@ export class AgentAuthClient {
    */
   async init(): Promise<ProviderConfig[]> {
     if (!this.urls?.length) return [];
-    const results = await Promise.allSettled(
-      this.urls.map((url) => this.discoverProvider(url)),
-    );
+    const results = await Promise.allSettled(this.urls.map((url) => this.discoverProvider(url)));
     const configs: ProviderConfig[] = [];
     for (const r of results) {
       if (r.status === "fulfilled") {
@@ -1269,7 +1266,6 @@ export class AgentAuthClient {
     const byIssuer = await this.storage.getProviderConfig(providerOrUrl);
     if (byIssuer) return byIssuer;
 
-    // Search by provider_name across all cached configs
     const all = await this.storage.listProviderConfigs();
     const byName = all.find((c) => c.provider_name === providerOrUrl);
     if (byName) return byName;

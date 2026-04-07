@@ -1,9 +1,4 @@
-import type {
-  AgentConnection,
-  HostIdentity,
-  ProviderConfig,
-  Storage,
-} from "./types";
+import type { AgentConnection, HostIdentity, ProviderConfig, Storage } from "./types";
 
 /**
  * Minimal key-value store interface.
@@ -123,16 +118,12 @@ export class KVStorage implements Storage {
 
   async listAgentConnections(): Promise<AgentConnection[]> {
     const ids = await this.getIndex(this.k("agents"));
-    const results = await Promise.all(
-      ids.map((id) => this.getAgentConnection(id)),
-    );
+    const results = await Promise.all(ids.map((id) => this.getAgentConnection(id)));
     return results.filter((c): c is AgentConnection => c !== null);
   }
 
   async getProviderConfig(issuer: string): Promise<ProviderConfig | null> {
-    return this.getJSON<ProviderConfig>(
-      this.k("provider", encodeURIComponent(issuer)),
-    );
+    return this.getJSON<ProviderConfig>(this.k("provider", encodeURIComponent(issuer)));
   }
 
   async setProviderConfig(issuer: string, config: ProviderConfig): Promise<void> {
@@ -142,9 +133,7 @@ export class KVStorage implements Storage {
 
   async listProviderConfigs(): Promise<ProviderConfig[]> {
     const issuers = await this.getIndex(this.k("providers"));
-    const results = await Promise.all(
-      issuers.map((issuer) => this.getProviderConfig(issuer)),
-    );
+    const results = await Promise.all(issuers.map((issuer) => this.getProviderConfig(issuer)));
     return results.filter((c): c is ProviderConfig => c !== null);
   }
 }

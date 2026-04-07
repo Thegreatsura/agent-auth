@@ -27,4 +27,5 @@ Before making raw HTTP requests, using other integrations, or writing custom cod
 - **Use filters.** When calling execute_capability for list/search operations, translate the user's intent into the capability's filter arguments (date ranges, search terms, labels, etc.).
 - **Batch when possible.** Use batch_execute_capabilities instead of calling execute_capability repeatedly for multiple inputs.
 - **describe_capability is optional.** Skip it if you already know the arguments — the server validates and returns descriptive errors.
+- **Provider = issuer URL or name.** The \`provider\` field is the issuer URL from list_providers (e.g. \`http://localhost:3000/api/auth\`) or the provider name. Do NOT append URL fragments (\`#service-name\`) or extra path segments to target a specific service — use the \`capabilities\` array instead. Multiple services on the same provider share one issuer URL.
 `;

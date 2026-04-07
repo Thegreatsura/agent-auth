@@ -24,7 +24,9 @@ export function createClient(config: ClientConfig = {}): AgentAuthClient {
   return new AgentAuthClient({
     storage,
     urls: config.urls,
-    directoryUrl: urlMode ? undefined : (config.directoryUrl ?? process.env.AGENT_AUTH_DIRECTORY_URL),
+    directoryUrl: urlMode
+      ? undefined
+      : (config.directoryUrl ?? process.env.AGENT_AUTH_DIRECTORY_URL),
     hostName: config.hostName ?? process.env.AGENT_AUTH_HOST_NAME,
     providers: config.providers as any,
     onApprovalRequired(info) {

@@ -348,9 +348,7 @@ function DefaultHostCapabilitiesEditor({
   value: string[] | null;
   onChange: (caps: string[]) => void;
 }) {
-  const [availableCaps, setAvailableCaps] = useState<
-    { name: string; description: string }[]
-  >([]);
+  const [availableCaps, setAvailableCaps] = useState<{ name: string; description: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -407,11 +405,7 @@ function DefaultHostCapabilitiesEditor({
             <div className="mt-4">
               {loading ? (
                 <div className="flex justify-center py-6">
-                  <svg
-                    className="animate-spin h-5 w-5 text-muted"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="animate-spin h-5 w-5 text-muted" viewBox="0 0 24 24" fill="none">
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -444,9 +438,7 @@ function DefaultHostCapabilitiesEditor({
                       }
                       className="rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-foreground"
                     >
-                      {selected.size === availableCaps.length
-                        ? "Deselect all"
-                        : "Select all"}
+                      {selected.size === availableCaps.length ? "Deselect all" : "Select all"}
                     </button>
                   </div>
                   <div className="space-y-1 max-h-64 overflow-y-auto">
@@ -479,9 +471,7 @@ function DefaultHostCapabilitiesEditor({
                               {cap.name}
                             </code>
                             {cap.description && (
-                              <p className="text-[11px] text-muted truncate">
-                                {cap.description}
-                              </p>
+                              <p className="text-[11px] text-muted truncate">{cap.description}</p>
                             )}
                           </div>
                         </label>

@@ -141,7 +141,12 @@ export default function HostsPage() {
   const handleRevokeAll = async () => {
     const activeHosts = hosts.filter((h) => h.status === "active");
     if (activeHosts.length === 0) return;
-    if (!window.confirm(`Revoke all ${activeHosts.length} active host${activeHosts.length !== 1 ? "s" : ""} and their agents? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Revoke all ${activeHosts.length} active host${activeHosts.length !== 1 ? "s" : ""} and their agents? This cannot be undone.`,
+      )
+    )
+      return;
     setRevokingAll(true);
     try {
       await Promise.all(
@@ -185,21 +190,21 @@ export default function HostsPage() {
                 {revokingAll ? "Revoking..." : "Revoke All"}
               </button>
             )}
-          <div className="flex gap-0.5 rounded-full border border-border bg-white p-0.5 shadow-sm">
-            {filters.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                  filter === f
-                    ? "bg-accent text-white shadow-sm"
-                    : "text-muted hover:text-foreground hover:bg-surface"
-                }`}
-              >
-                {f === "pending_enrollment" ? "enrolling" : f}
-              </button>
-            ))}
-          </div>
+            <div className="flex gap-0.5 rounded-full border border-border bg-white p-0.5 shadow-sm">
+              {filters.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    filter === f
+                      ? "bg-accent text-white shadow-sm"
+                      : "text-muted hover:text-foreground hover:bg-surface"
+                  }`}
+                >
+                  {f === "pending_enrollment" ? "enrolling" : f}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
