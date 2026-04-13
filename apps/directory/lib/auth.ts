@@ -7,7 +7,7 @@ import { db } from "./db";
 import * as schema from "./db/schema";
 import { normalizeLoopbackUri } from "./loopback";
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:4200";
+const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://directory.localhost";
 
 export const auth = betterAuth({
   baseURL: BASE_URL,

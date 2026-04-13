@@ -212,9 +212,29 @@ export function formatGrantsResponse(
   capabilityDefs?: Capability[],
   opts?: { compact?: boolean },
 ): Array<Record<string, unknown>> {
+  const withoutConsumed = grants.filter((g) => g.status !== "consumed");
+
+  const STATUS_PRIORITY: Record<string, number> = { active: 0, pending: 1, denied: 2, revoked: 3 };
+  const best = new Map<string, AgentCapabilityGrant>();
+  for (const g of withoutConsumed) {
+    const existing = best.get(g.capability);
+    if (!existing) {
+      best.set(g.capability, g);
+      continue;
+    }
+    const gPrio = STATUS_PRIORITY[g.status] ?? 9;
+    const ePrio = STATUS_PRIORITY[existing.status] ?? 9;
+    if (gPrio < ePrio) {
+      best.set(g.capability, g);
+    } else if (gPrio === ePrio && new Date(g.createdAt) > new Date(existing.createdAt)) {
+      best.set(g.capability, g);
+    }
+  }
+  const deduplicated = Array.from(best.values());
+
   const defsMap = capabilityDefs ? new Map(capabilityDefs.map((c) => [c.name, c])) : null;
 
-  return grants.map((g) => {
+  return deduplicated.map((g) => {
     const base: Record<string, unknown> = {
       capability: g.capability,
       status: g.status,
@@ -404,6 +424,44 @@ export function validateCapabilityIds(
         "BAD_REQUEST",
         ERR.CAPABILITY_BLOCKED,
         `Blocked capabilities: ${blocked.join(", ")}`,
+      );
+    }
+  }
+}
+
+/**
+ * Validate that capabilities with `requiredConstraints` have all
+ * required fields present in the agent's proposed constraints.
+ * Rejects the request with a descriptive error if any are missing.
+ */
+export function validateRequiredConstraints(
+  normalizedCaps: NormalizedCapability[] | null,
+  opts: ResolvedAgentAuthOptions,
+): void {
+  if (!normalizedCaps || !opts.capabilities) return;
+
+  const capDefs = new Map(opts.capabilities.map((c) => [c.name, c]));
+
+  for (const req of normalizedCaps) {
+    const def = capDefs.get(req.name);
+    if (!def?.requiredConstraints || def.requiredConstraints.length === 0) continue;
+
+    const proposed = req.constraints;
+    if (!proposed) {
+      throw agentError(
+        "BAD_REQUEST",
+        ERR.INVALID_REQUEST,
+        `Capability "${req.name}" requires constraints on: ${def.requiredConstraints.join(", ")}. ` +
+          `Request it as: { name: "${req.name}", constraints: { ${def.requiredConstraints.map((f) => `${f}: ...`).join(", ")} } }`,
+      );
+    }
+
+    const missing = def.requiredConstraints.filter((f) => !(f in proposed));
+    if (missing.length > 0) {
+      throw agentError(
+        "BAD_REQUEST",
+        ERR.INVALID_REQUEST,
+        `Capability "${req.name}" is missing required constraint fields: ${missing.join(", ")}.`,
       );
     }
   }
@@ -804,6 +862,7 @@ export async function tryAutoGrantFromHostBudget(
   if (!hasCapability(budget, params.capabilityName)) return null;
 
   // Don't auto-grant if the capability was explicitly revoked or denied
+  // ("consumed" grants are one-time-use completions and should not block re-granting)
   const existingGrants = await adapter.findMany<AgentCapabilityGrant>({
     model: TABLE.grant,
     where: [

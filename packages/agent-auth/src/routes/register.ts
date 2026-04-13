@@ -27,21 +27,13 @@ import {
   findHostByKey,
   formatGrantsResponse,
   isDynamicHostAllowed,
-  normalizeCapabilities,
   resolveDefaultHostCapabilities,
   validateCapabilityIds,
   validateCapabilitiesExist,
+  validateRequiredConstraints,
   validateKeyAlgorithm,
   verifyAudience,
 } from "./_helpers";
-
-const capabilityRequestItem = z.union([
-  z.string(),
-  z.object({
-    name: z.string(),
-    constraints: z.record(z.string(), z.unknown()).optional(),
-  }),
-]);
 
 const registerBodySchema = z.object({
   name: z.string().min(1),
@@ -100,6 +92,9 @@ export function register(
             rawCapabilities as Array<string | { name: string; constraints?: Constraints }>,
           )
         : null;
+
+      validateRequiredConstraints(normalizedCaps, opts);
+
       const requestedCapIds = normalizedCaps?.map((c) => c.name) ?? null;
       const constraintsMap = new Map<string, Constraints | null>();
       if (normalizedCaps) {

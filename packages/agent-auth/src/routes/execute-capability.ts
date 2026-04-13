@@ -176,6 +176,14 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
       let result: unknown;
       let execError: string | undefined;
 
+      const revokeGrant = async () => {
+        await ctx.context.adapter.update({
+          model: TABLE.grant,
+          where: [{ field: "id", value: activeGrant!.id }],
+          update: { status: "consumed", updatedAt: new Date() },
+        });
+      };
+
       try {
         result = await opts.onExecute({
           ctx,
@@ -183,6 +191,8 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
           capabilityDef,
           arguments: args,
           agentSession,
+          grant: activeGrant,
+          revokeGrant,
         });
       } catch (err) {
         execError = err instanceof Error ? err.message : String(err);

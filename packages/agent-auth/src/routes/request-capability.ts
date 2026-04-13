@@ -20,16 +20,9 @@ import {
   capabilityItemZ,
   formatGrantsResponse,
   validateCapabilitiesExist,
+  validateRequiredConstraints,
 } from "./_helpers";
 import { constraintsCover } from "../utils/constraints";
-
-const capabilityRequestItem = z.union([
-  z.string(),
-  z.object({
-    name: z.string(),
-    constraints: z.record(z.string(), z.unknown()).optional(),
-  }),
-]);
 
 /**
  * POST /agent/request-capability (§5.4).
@@ -82,6 +75,9 @@ export function requestCapability(opts: ResolvedAgentAuthOptions) {
       const normalizedCaps = normalizeCapabilityRequests(
         rawCapabilities as Array<string | { name: string; constraints?: Constraints }>,
       );
+
+      validateRequiredConstraints(normalizedCaps, opts);
+
       const capabilityIds = normalizedCaps.map((c) => c.name);
       const constraintsMap = new Map<string, Constraints | null>();
       for (const c of normalizedCaps) {

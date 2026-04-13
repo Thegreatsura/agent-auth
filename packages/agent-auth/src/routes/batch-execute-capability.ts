@@ -125,10 +125,6 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
         capDefMap.set(cap.name, cap);
       }
 
-      const sessionGrantMap = new Map(
-        agentSession.agent.capabilityGrants.map((g) => [g.capability, g]),
-      );
-
       const uniqueCapNames = [...new Set(requests.map((r) => r.capability))];
       const dbGrantsMap = new Map<string, AgentCapabilityGrant[]>();
       const now = new Date();
@@ -203,6 +199,14 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
           const startTime = Date.now();
           let result: unknown;
 
+          const revokeGrant = async () => {
+            await ctx.context.adapter.update({
+              model: TABLE.grant,
+              where: [{ field: "id", value: activeGrant.id }],
+              update: { status: "consumed", updatedAt: new Date() },
+            });
+          };
+
           try {
             result = await onExecute({
               ctx,
@@ -210,6 +214,8 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
               capabilityDef: capDef,
               arguments: req.arguments,
               agentSession,
+              grant: activeGrant,
+              revokeGrant,
             });
           } catch (err) {
             const execError = err instanceof Error ? err.message : String(err);

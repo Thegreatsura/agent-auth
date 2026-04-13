@@ -55,6 +55,21 @@ export interface Capability {
    * @default "session"
    */
   approvalStrength?: ApprovalStrength;
+  /**
+   * Fields that MUST be constrained when an agent requests this
+   * capability (§2.13). The server rejects registration or
+   * request-capability calls where any listed field is missing
+   * from the agent's proposed constraints.
+   *
+   * Example: `["amountCents", "currency", "merchantName"]`
+   */
+  requiredConstraints?: string[];
+  /**
+   * Default TTL (in seconds) for grants of this capability.
+   * Applied when a grant is created/activated and no explicit TTL
+   * is provided by `resolveGrantTTL`. Sets `expiresAt` on the grant.
+   */
+  grantTTL?: number;
   grant_status?: "granted" | "not_granted";
   [key: string]: unknown;
 }
@@ -87,7 +102,7 @@ export type AgentStatus = "active" | "pending" | "expired" | "revoked" | "reject
 
 export type HostStatus = "active" | "pending" | "pending_enrollment" | "revoked" | "rejected";
 
-export type GrantStatus = "active" | "pending" | "denied" | "revoked";
+export type GrantStatus = "active" | "pending" | "denied" | "revoked" | "consumed";
 
 /** Host — §8.1. */
 export interface AgentHost {
@@ -661,6 +676,14 @@ export interface AgentAuthOptions {
     capabilityDef: Capability;
     arguments?: Record<string, unknown>;
     agentSession: AgentSession;
+    /** The active grant that authorized this execution. */
+    grant: AgentCapabilityGrant;
+    /**
+     * Revoke the grant that authorized this execution.
+     * Call this for single-use capabilities (e.g. payments) to
+     * consume the grant after successful execution.
+     */
+    revokeGrant: () => Promise<void>;
   }) => unknown | ExecuteResult | Promise<unknown | ExecuteResult>;
   /**
    * Called when an autonomous agent is claimed (§3.4).

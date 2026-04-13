@@ -10,6 +10,7 @@ const config: NextConfig = {
   },
   devIndicators: false,
   serverExternalPackages: ["onnxruntime-node", "@huggingface/transformers"],
+  allowedDevOrigins: ["directory.localhost", "*.directory.localhost"],
 };
 
 export default config;
