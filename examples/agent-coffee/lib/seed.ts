@@ -1,4 +1,3 @@
-import { sql } from "./db/index";
 import { db } from "./db/index";
 import { product } from "./db/schema";
 
@@ -76,7 +75,6 @@ async function seed() {
   }
 
   console.log("Done.");
-  await sql.end();
 }
 
 seed().catch((e) => {

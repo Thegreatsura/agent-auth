@@ -1,4 +1,4 @@
-import type { Auth } from "better-auth";
+import type { Auth, BetterAuthOptions } from "better-auth";
 
 /**
  * Verify an agent JWT in a custom route handler (outside Better Auth endpoints).
@@ -6,7 +6,7 @@ import type { Auth } from "better-auth";
  * Forwards the JWT to the plugin's `/agent/session` endpoint which runs
  * the full verification flow (§5.5) and returns the agent session.
  */
-export async function verifyAgentRequest(request: Request, auth: Auth) {
+export async function verifyAgentRequest<O extends BetterAuthOptions>(request: Request, auth: Auth<O>) {
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
 

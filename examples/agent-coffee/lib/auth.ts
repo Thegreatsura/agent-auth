@@ -7,7 +7,7 @@ import { db, schema } from "./db";
 import { listProducts, getProductBySlug, listAgentOrders, getOrder, createOrder } from "./db";
 import { mppx } from "./mpp";
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://agent-shop.localhost";
+const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://agent-coffee.localhost";
 const STRIPE_AGENTS_URL = process.env.STRIPE_AGENTS_URL ?? "http://stripe-agents.localhost";
 
 const capabilities: Capability[] = [
@@ -237,12 +237,12 @@ export const auth = betterAuth({
             if (!product) throw new Error("Product not found");
             if (!product.inStock) throw new Error("Product is out of stock");
 
-            let chargeRequest = ctx.request;
+            let chargeRequest = ctx.request!;
             if (args.credential) {
-              const newHeaders = new Headers(ctx.request.headers);
+              const newHeaders = new Headers(ctx.request!.headers);
               newHeaders.set("authorization", String(args.credential));
-              chargeRequest = new Request(ctx.request.url, {
-                method: ctx.request.method,
+              chargeRequest = new Request(ctx.request!.url, {
+                method: ctx.request!.method,
                 headers: newHeaders,
               });
             }
@@ -253,8 +253,6 @@ export const auth = betterAuth({
               decimals: 2,
               description: `${product.name} - Agent Coffee Shop`,
             })(chargeRequest);
-
-            console.log({result})
 
             if (result.status === 402) {
               const challenge = Challenge.fromResponse(result.challenge as Response);
@@ -269,20 +267,13 @@ export const auth = betterAuth({
               };
             }
 
-            const receipt = result.receipt;
-            const stripePaymentIntentId =
-              receipt?.paymentIntent ?? receipt?.payment_intent ?? null;
-
             const newOrder = await createOrder({
               productId: product.id,
               productName: product.name,
               amountCents: product.priceCents,
               currency: "usd",
-              stripePaymentIntentId: stripePaymentIntentId ?? undefined,
               agentId,
-              receipt: receipt ?? undefined,
             });
-            console.log({newOrder})
 
             return {
               status: "order_confirmed",

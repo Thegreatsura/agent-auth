@@ -28,10 +28,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     return result.challenge;
   }
 
-  const receipt = result.receipt;
-  const stripePaymentIntentId =
-    receipt?.paymentIntent ?? receipt?.payment_intent ?? null;
-
   const order = await createOrder({
     productId: product.id,
     productName: product.name,
@@ -39,8 +35,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     currency: "usd",
     agentId: agentSession?.agent?.id ?? undefined,
     userId: agentSession?.user?.id ?? undefined,
-    stripePaymentIntentId: stripePaymentIntentId ?? undefined,
-    receipt: receipt ?? undefined,
   });
 
   return result.withReceipt(
