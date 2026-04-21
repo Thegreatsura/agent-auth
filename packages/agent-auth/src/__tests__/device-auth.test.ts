@@ -238,10 +238,10 @@ describe("Approval expiry", () => {
 });
 
 // ================================================================
-// C. /device/code endpoint
+// C. /agent/device/code endpoint
 // ================================================================
 
-describe("/device/code endpoint", () => {
+describe("/agent/device/code endpoint", () => {
   it("returns valid RFC 8628 response shape", async () => {
     const { hostId, hostKeypair } = await setupAgent();
 
@@ -262,7 +262,7 @@ describe("/device/code endpoint", () => {
       audience: BASE,
     });
 
-    const res = await client.api("/device/code", {
+    const res = await client.api("/agent/device/code", {
       method: "POST",
       headers: { authorization: `Bearer ${hostJWT}` },
       body: JSON.stringify({ agent_id: pendingAgentId }),
@@ -280,7 +280,7 @@ describe("/device/code endpoint", () => {
     expect(typeof body.user_code).toBe("string");
   });
 
-  it("user_code from /device/code can approve the agent", async () => {
+  it("user_code from /agent/device/code can approve the agent", async () => {
     const { hostId, hostKeypair } = await setupAgent();
 
     const agentKeypair = await generateTestKeypair();
@@ -299,7 +299,7 @@ describe("/device/code endpoint", () => {
       audience: BASE,
     });
 
-    const codeRes = await client.api("/device/code", {
+    const codeRes = await client.api("/agent/device/code", {
       method: "POST",
       headers: { authorization: `Bearer ${hostJWT}` },
       body: JSON.stringify({ agent_id: agentId }),
@@ -335,7 +335,7 @@ describe("/device/code endpoint", () => {
       audience: BASE,
     });
 
-    const res = await client.api("/device/code", {
+    const res = await client.api("/agent/device/code", {
       method: "POST",
       headers: { authorization: `Bearer ${hostJWT}` },
       body: JSON.stringify({ agent_id: agentId }),
@@ -368,7 +368,7 @@ describe("/device/code endpoint", () => {
       audience: BASE,
     });
 
-    const res = await client.api("/device/code", {
+    const res = await client.api("/agent/device/code", {
       method: "POST",
       headers: { authorization: `Bearer ${hostJWT}` },
       body: JSON.stringify({ agent_id: agentId }),
