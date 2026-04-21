@@ -283,7 +283,9 @@ function DeviceCapabilitiesContent() {
                 <span className="text-[9px] font-semibold text-muted-foreground tracking-wider uppercase">
                   Verification Code
                 </span>
-                <p className="mt-1.5 text-[20px] font-mono font-bold tracking-[0.3em] text-foreground">{code}</p>
+                <p className="mt-1.5 text-[20px] font-mono font-bold tracking-[0.3em] text-foreground">
+                  {code}
+                </p>
               </div>
             )}
 
@@ -392,7 +394,9 @@ function DeviceCapabilitiesContent() {
           <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center mx-auto">
             <AgentAuthLogo className="h-[14px] w-auto opacity-40" />
           </div>
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Missing Parameters</h1>
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            Missing Parameters
+          </h1>
           <p className="text-[13px] text-muted-foreground">
             This page requires an agent_id parameter. Use the verification link provided by the
             agent.
@@ -502,7 +506,9 @@ function DeviceCapabilitiesContent() {
     : [];
   const displayGrants = isClaim ? activeGrants : pendingGrants;
   const needsActivation = agentInfo?.needsActivation ?? false;
-  const hasPay = pendingGrants.some((g) => g.capability === "pay") || activeGrants.some((g) => g.capability === "pay");
+  const hasPay =
+    pendingGrants.some((g) => g.capability === "pay") ||
+    activeGrants.some((g) => g.capability === "pay");
 
   if (displayGrants.length === 0 && !needsActivation) {
     return (
@@ -523,7 +529,9 @@ function DeviceCapabilitiesContent() {
               <path d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Already Resolved</h1>
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            Already Resolved
+          </h1>
           <p className="text-[13px] text-muted-foreground">
             This agent has no pending capability requests. It may have already been approved or
             denied.
@@ -585,7 +593,9 @@ function DeviceCapabilitiesContent() {
               <span className="text-[9px] font-semibold text-muted-foreground tracking-wider uppercase">
                 Verification Code
               </span>
-              <p className="mt-1.5 text-[20px] font-mono font-bold tracking-[0.3em] text-foreground">{code}</p>
+              <p className="mt-1.5 text-[20px] font-mono font-bold tracking-[0.3em] text-foreground">
+                {code}
+              </p>
             </div>
           )}
 
@@ -622,13 +632,22 @@ function DeviceCapabilitiesContent() {
                   {displayGrants.map((g) => {
                     const isPayment = g.capability === "pay" && g.constraints;
                     const constraints = g.constraints ?? {};
-                    const amountRaw = constraints.amountCents as number | { max?: number } | undefined;
+                    const amountRaw = constraints.amountCents as
+                      | number
+                      | { max?: number }
+                      | undefined;
                     const amountCents = typeof amountRaw === "number" ? amountRaw : amountRaw?.max;
                     const currency = (constraints.currency as string | { eq?: string })
-                      ? typeof constraints.currency === "string" ? constraints.currency : (constraints.currency as { eq?: string })?.eq ?? "usd"
+                      ? typeof constraints.currency === "string"
+                        ? constraints.currency
+                        : ((constraints.currency as { eq?: string })?.eq ?? "usd")
                       : "usd";
-                    const merchantRaw = constraints.merchantName as string | { eq?: string } | undefined;
-                    const merchant = typeof merchantRaw === "string" ? merchantRaw : merchantRaw?.eq;
+                    const merchantRaw = constraints.merchantName as
+                      | string
+                      | { eq?: string }
+                      | undefined;
+                    const merchant =
+                      typeof merchantRaw === "string" ? merchantRaw : merchantRaw?.eq;
 
                     if (isPayment && amountCents) {
                       return (
@@ -636,12 +655,15 @@ function DeviceCapabilitiesContent() {
                           <div
                             className="relative p-4 text-white"
                             style={{
-                              background: "linear-gradient(135deg, #2a2a2e 0%, #1c1c1f 30%, #18181b 65%, #111113 100%)",
+                              background:
+                                "linear-gradient(135deg, #2a2a2e 0%, #1c1c1f 30%, #18181b 65%, #111113 100%)",
                             }}
                           >
                             <div className="flex items-start justify-between mb-4">
                               <div>
-                                <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">Spend Limit</p>
+                                <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">
+                                  Spend Limit
+                                </p>
                                 <p className="text-[28px] font-bold tracking-tight leading-none mt-1">
                                   ${(amountCents / 100).toFixed(2)}
                                 </p>
@@ -651,13 +673,21 @@ function DeviceCapabilitiesContent() {
                             <div className="flex gap-6">
                               {merchant && (
                                 <div>
-                                  <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">Merchant</p>
-                                  <p className="text-[13px] font-medium text-white/90">{merchant}</p>
+                                  <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">
+                                    Merchant
+                                  </p>
+                                  <p className="text-[13px] font-medium text-white/90">
+                                    {merchant}
+                                  </p>
                                 </div>
                               )}
                               <div>
-                                <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">Currency</p>
-                                <p className="text-[13px] font-medium text-white/90">{currency.toUpperCase()}</p>
+                                <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">
+                                  Currency
+                                </p>
+                                <p className="text-[13px] font-medium text-white/90">
+                                  {currency.toUpperCase()}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -731,7 +761,8 @@ function DeviceCapabilitiesContent() {
                   >
                     {cards.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.brand} •••• {c.last4}{c.isDefault ? " (default)" : ""}
+                        {c.brand} •••• {c.last4}
+                        {c.isDefault ? " (default)" : ""}
                       </option>
                     ))}
                   </select>
@@ -744,7 +775,12 @@ function DeviceCapabilitiesContent() {
                   </button>
                   {showAddCard && (
                     <Elements stripe={stripePromise}>
-                      <InlineAddCard onAdded={() => { fetchCards(); setShowAddCard(false); }} />
+                      <InlineAddCard
+                        onAdded={() => {
+                          fetchCards();
+                          setShowAddCard(false);
+                        }}
+                      />
                     </Elements>
                   )}
                 </div>

@@ -18,8 +18,16 @@ interface Payment {
 }
 
 const MERCHANT_COLORS = [
-  "#1a1f36", "#533afe", "#0A8754", "#DF1B41", "#00A0D2",
-  "#F7B955", "#7C3AED", "#059669", "#DC2626", "#2563EB",
+  "#1a1f36",
+  "#533afe",
+  "#0A8754",
+  "#DF1B41",
+  "#00A0D2",
+  "#F7B955",
+  "#7C3AED",
+  "#059669",
+  "#DC2626",
+  "#2563EB",
 ];
 
 function getMerchantColor(name: string): string {
@@ -101,14 +109,16 @@ export default function ActivityPage() {
   useEffect(() => {
     Promise.all([
       fetch("/api/payments").then((r) => r.json()),
-      fetch("/api/stripe/cards").then((r) => r.json()).catch(() => ({ cards: [] })),
+      fetch("/api/stripe/cards")
+        .then((r) => r.json())
+        .catch(() => ({ cards: [] })),
     ])
       .then(([payData, cardData]) => {
         const userCards: CardInfo[] = cardData.cards ?? [];
         const all = (payData.payments ?? []).map((p: Payment) => ({
           ...p,
           cardBrand: p.cardLast4
-            ? userCards.find((c) => c.last4 === p.cardLast4)?.brand ?? null
+            ? (userCards.find((c) => c.last4 === p.cardLast4)?.brand ?? null)
             : null,
         }));
         setPayments(all);
@@ -138,7 +148,10 @@ export default function ActivityPage() {
           </div>
         ) : payments.length === 0 ? (
           <div className="px-6 py-20 text-center">
-            <ReceiptText className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" strokeWidth={1.5} />
+            <ReceiptText
+              className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3"
+              strokeWidth={1.5}
+            />
             <p className="text-[14px] text-muted-foreground">No activity yet</p>
             <p className="text-[13px] text-muted-foreground/70 mt-1">
               Agent payments will appear here.
@@ -196,9 +209,7 @@ export default function ActivityPage() {
               {selected.merchantName}
             </p>
             {selected.agentName && (
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                via {selected.agentName}
-              </p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">via {selected.agentName}</p>
             )}
             <p className="text-[13px] text-muted-foreground mt-0.5">
               {formatDateTime(selected.createdAt)}
@@ -238,9 +249,7 @@ export default function ActivityPage() {
                   <div className="border-t border-border/60" />
                   <div className="flex items-center justify-between py-3">
                     <span className="text-[14px] text-foreground">Agent</span>
-                    <span className="text-[14px] text-muted-foreground">
-                      {selected.agentName}
-                    </span>
+                    <span className="text-[14px] text-muted-foreground">{selected.agentName}</span>
                   </div>
                 </>
               )}

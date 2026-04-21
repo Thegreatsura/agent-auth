@@ -209,9 +209,7 @@ export const savedCard = pgTable(
     isDefault: boolean("is_default").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    index("savedCard_userId_idx").on(table.userId),
-  ],
+  (table) => [index("savedCard_userId_idx").on(table.userId)],
 );
 
 export const agentPayment = pgTable(

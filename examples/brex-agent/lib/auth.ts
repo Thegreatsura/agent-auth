@@ -32,7 +32,8 @@ const capabilities: Capability[] = [
     constrainable_fields: {
       amountCents: {
         type: "number",
-        description: "Maximum amount in cents the agent can spend (use max operator, e.g. { max: 1800 })",
+        description:
+          "Maximum amount in cents the agent can spend (use max operator, e.g. { max: 1800 })",
         required: true,
       },
       currency: {
@@ -63,7 +64,10 @@ const capabilities: Capability[] = [
       type: "object",
       properties: {
         status: { type: "string" },
-        spt: { type: "string", description: "Stripe Shared Payment Token to use as MPP credential" },
+        spt: {
+          type: "string",
+          description: "Stripe Shared Payment Token to use as MPP credential",
+        },
         amountCents: { type: "number" },
         currency: { type: "string" },
         expiresAt: { type: "string" },
@@ -175,7 +179,10 @@ export const auth = betterAuth({
 
             // Get Brex card
             const conn = await getBrexConnection(userId);
-            if (!conn) throw new Error("No Brex account connected. Ask the owner to connect their Brex account.");
+            if (!conn)
+              throw new Error(
+                "No Brex account connected. Ask the owner to connect their Brex account.",
+              );
 
             const card = await getDefaultCard(userId);
             if (!card) throw new Error("No Brex card available. Ask the owner to connect a card.");

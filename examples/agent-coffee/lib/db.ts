@@ -72,17 +72,9 @@ export async function listOrders() {
 }
 
 export async function listUserOrders(userId: string) {
-  return db
-    .select()
-    .from(order)
-    .where(eq(order.userId, userId))
-    .orderBy(desc(order.createdAt));
+  return db.select().from(order).where(eq(order.userId, userId)).orderBy(desc(order.createdAt));
 }
 
 export async function listAgentOrders(agentId: string) {
-  return db
-    .select()
-    .from(order)
-    .where(eq(order.agentId, agentId))
-    .orderBy(desc(order.createdAt));
+  return db.select().from(order).where(eq(order.agentId, agentId)).orderBy(desc(order.createdAt));
 }

@@ -6,7 +6,10 @@ import type { Auth, BetterAuthOptions } from "better-auth";
  * Forwards the JWT to the plugin's `/agent/session` endpoint which runs
  * the full verification flow (§5.5) and returns the agent session.
  */
-export async function verifyAgentRequest<O extends BetterAuthOptions>(request: Request, auth: Auth<O>) {
+export async function verifyAgentRequest<O extends BetterAuthOptions>(
+  request: Request,
+  auth: Auth<O>,
+) {
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
 

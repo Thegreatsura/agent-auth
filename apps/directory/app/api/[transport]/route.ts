@@ -7,7 +7,8 @@ import { SERVER_INSTRUCTIONS } from "@auth/agent";
 import { sql } from "@/lib/db";
 import { getToolsForUser, jsonSchemaToZod } from "@/lib/mcp";
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://directory.localhost";
+const BASE_URL =
+  process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://directory.localhost";
 const JWKS = createRemoteJWKSet(new URL(`${BASE_URL}/api/auth/jwks`));
 
 async function verifyJwt(token: string): Promise<{ userId: string } | null> {

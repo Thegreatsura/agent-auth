@@ -65,16 +65,35 @@ export default function AgentsPage() {
           {agents.map((a) => (
             <div key={a.agent_id} className="rounded-lg border border-border p-4">
               <div className="flex items-center gap-3">
-                <div className={`flex items-center justify-center h-8 w-8 rounded-full shrink-0 ${
-                  isOpenCode(a.name) ? "bg-[#00DC82]/10"
-                  : a.status === "active" ? "bg-emerald-500/10" : a.status === "claimed" ? "bg-blue-500/10" : "bg-foreground/[0.04]"
-                }`}>
+                <div
+                  className={`flex items-center justify-center h-8 w-8 rounded-full shrink-0 ${
+                    isOpenCode(a.name)
+                      ? "bg-[#00DC82]/10"
+                      : a.status === "active"
+                        ? "bg-emerald-500/10"
+                        : a.status === "claimed"
+                          ? "bg-blue-500/10"
+                          : "bg-foreground/[0.04]"
+                  }`}
+                >
                   {isOpenCode(a.name) ? (
                     <OpenCodeIcon className="h-4 w-4" />
                   ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={
-                      a.status === "active" ? "text-emerald-500" : a.status === "claimed" ? "text-blue-500" : "text-foreground/30"
-                    }>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      className={
+                        a.status === "active"
+                          ? "text-emerald-500"
+                          : a.status === "claimed"
+                            ? "text-blue-500"
+                            : "text-foreground/30"
+                      }
+                    >
                       <rect x="3" y="11" width="18" height="10" rx="2" />
                       <circle cx="9" cy="16" r="1.5" fill="currentColor" stroke="none" />
                       <circle cx="15" cy="16" r="1.5" fill="currentColor" stroke="none" />
@@ -85,23 +104,34 @@ export default function AgentsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium">{a.name}</span>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded capitalize ${
-                      a.status === "active" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : a.status === "claimed" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                      : "bg-foreground/[0.06] text-foreground/40"
-                    }`}>
+                    <span
+                      className={`text-[10px] font-medium px-1.5 py-0.5 rounded capitalize ${
+                        a.status === "active"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : a.status === "claimed"
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : "bg-foreground/[0.06] text-foreground/40"
+                      }`}
+                    >
                       {a.status}
                     </span>
-                    <span className="text-[10px] text-foreground/30 bg-foreground/[0.04] rounded px-1.5 py-0.5">{a.mode}</span>
+                    <span className="text-[10px] text-foreground/30 bg-foreground/[0.04] rounded px-1.5 py-0.5">
+                      {a.mode}
+                    </span>
                   </div>
                   <span className="text-[11px] text-foreground/30 font-mono">{a.agent_id}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {a.agent_capability_grants.filter(g => g.status === "active").map((g) => (
-                    <span key={g.capability} className="text-[10px] font-mono rounded bg-foreground/[0.04] px-1.5 py-0.5 text-foreground/40">
-                      {g.capability}
-                    </span>
-                  ))}
+                  {a.agent_capability_grants
+                    .filter((g) => g.status === "active")
+                    .map((g) => (
+                      <span
+                        key={g.capability}
+                        className="text-[10px] font-mono rounded bg-foreground/[0.04] px-1.5 py-0.5 text-foreground/40"
+                      >
+                        {g.capability}
+                      </span>
+                    ))}
                 </div>
               </div>
             </div>

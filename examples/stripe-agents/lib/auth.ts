@@ -7,7 +7,8 @@ import Stripe from "stripe";
 import { db, schema } from "./db";
 import { createPayment, listAllPayments, getDefaultCard } from "./db";
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://stripe-agents.localhost";
+const BASE_URL =
+  process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://stripe-agents.localhost";
 const platformStripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-04.preview" as Stripe.LatestApiVersion,
 });
@@ -25,7 +26,8 @@ const capabilities: Capability[] = [
     constrainable_fields: {
       amountCents: {
         type: "number",
-        description: "Maximum amount in cents the agent can spend (use max operator, e.g. { max: 1800 })",
+        description:
+          "Maximum amount in cents the agent can spend (use max operator, e.g. { max: 1800 })",
         required: true,
       },
       currency: {
@@ -46,7 +48,11 @@ const capabilities: Capability[] = [
         currency: { type: "string", description: "ISO currency code (e.g. usd)" },
         merchantName: { type: "string", description: "Name of the merchant" },
         itemDescription: { type: "string", description: "Description of what is being purchased" },
-        challenge: { type: "object", description: "The full MPP challenge object from the merchant's payment_required response" },
+        challenge: {
+          type: "object",
+          description:
+            "The full MPP challenge object from the merchant's payment_required response",
+        },
       },
       required: ["amountCents", "currency", "merchantName", "itemDescription", "challenge"],
     },
@@ -54,7 +60,11 @@ const capabilities: Capability[] = [
       type: "object",
       properties: {
         status: { type: "string" },
-        credential: { type: "string", description: "MPP credential — pass this as the 'credential' argument to the merchant's shop.buy capability" },
+        credential: {
+          type: "string",
+          description:
+            "MPP credential — pass this as the 'credential' argument to the merchant's shop.buy capability",
+        },
         sptId: { type: "string", description: "Stripe Shared Payment Token ID" },
         cardLast4: { type: "string" },
         expiresAt: { type: "string", description: "ISO timestamp when the SPT expires" },
@@ -114,8 +124,15 @@ export const auth = betterAuth({
 
         switch (capability) {
           case "pay": {
-            if (!args?.amountCents || !args?.merchantName || !args?.itemDescription || !args?.challenge) {
-              throw new Error("Missing required arguments: amountCents, merchantName, itemDescription, challenge");
+            if (
+              !args?.amountCents ||
+              !args?.merchantName ||
+              !args?.itemDescription ||
+              !args?.challenge
+            ) {
+              throw new Error(
+                "Missing required arguments: amountCents, merchantName, itemDescription, challenge",
+              );
             }
 
             const amountCents = Number(args.amountCents);
@@ -131,8 +148,8 @@ export const auth = betterAuth({
             if (!card) {
               throw new Error(
                 "PAYMENT_METHOD_REQUIRED: No card on file. " +
-                "The account owner must add a card at /dashboard/wallet before payments can be processed. " +
-                "Please ask the user to add a payment method and try again."
+                  "The account owner must add a card at /dashboard/wallet before payments can be processed. " +
+                  "Please ask the user to add a payment method and try again.",
               );
             }
 
@@ -163,11 +180,14 @@ export const auth = betterAuth({
               );
             }
 
-            const spt = (await sptResponse.json()) as { id: string; payment_method_details?: { card?: { last4?: string } } };
+            const spt = (await sptResponse.json()) as {
+              id: string;
+              payment_method_details?: { card?: { last4?: string } };
+            };
             const sptLast4 = spt.payment_method_details?.card?.last4 ?? card.last4;
 
             const credential = Credential.serialize({
-              challenge: challenge as Credential.Credential['challenge'],
+              challenge: challenge as Credential.Credential["challenge"],
               payload: { spt: spt.id },
             });
 

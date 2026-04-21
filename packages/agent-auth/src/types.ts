@@ -193,10 +193,11 @@ export type Constraints = CapabilityConstraints;
 
 /**
  * Normalized capability request after parsing `string | { name, constraints }`.
+ * Matches the return type of `normalizeCapabilityRequests()`.
  */
 export interface NormalizedCapability {
-  capabilityId: string;
-  constraints?: CapabilityConstraints;
+  name: string;
+  constraints: CapabilityConstraints | null;
 }
 
 /** Agent capability grant — §8.3. */
@@ -802,7 +803,7 @@ export type CapabilityRequest = string | { name: string; constraints?: Constrain
  */
 export function normalizeCapabilityRequests(
   capabilities: CapabilityRequest[],
-): Array<{ name: string; constraints: Constraints | null }> {
+): NormalizedCapability[] {
   return capabilities.map((c) => {
     if (typeof c === "string") return { name: c, constraints: null };
     return { name: c.name, constraints: c.constraints ?? null };

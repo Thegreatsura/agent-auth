@@ -59,14 +59,15 @@ export default function DashboardOverview() {
       <h1 className="text-[22px] font-semibold mb-1">
         Welcome{session?.user.name ? `, ${session.user.name}` : ""}
       </h1>
-      <p className="text-[13px] text-white/40 mb-6">
-        Manage agent payments and approvals
-      </p>
+      <p className="text-[13px] text-white/40 mb-6">Manage agent payments and approvals</p>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-5 h-28 animate-pulse" />
+            <div
+              key={i}
+              className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-5 h-28 animate-pulse"
+            />
           ))}
         </div>
       ) : (
@@ -107,15 +108,16 @@ export default function DashboardOverview() {
               </div>
               {defaultCard ? (
                 <>
-                  <p className="text-[20px] font-semibold font-mono">
-                    •••• {defaultCard.last4}
-                  </p>
+                  <p className="text-[20px] font-semibold font-mono">•••• {defaultCard.last4}</p>
                   <p className="text-[12px] text-white/30 mt-1">
                     {defaultCard.cardName} · {defaultCard.cardType}
                   </p>
                 </>
               ) : (
-                <Link href="/dashboard/settings" className="text-[13px] text-white/40 hover:text-white underline mt-2 inline-block">
+                <Link
+                  href="/dashboard/settings"
+                  className="text-[13px] text-white/40 hover:text-white underline mt-2 inline-block"
+                >
                   Connect Brex →
                 </Link>
               )}
@@ -124,7 +126,10 @@ export default function DashboardOverview() {
 
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[14px] font-semibold">Recent activity</h2>
-            <Link href="/dashboard/history" className="text-[12px] text-white/30 hover:text-white/60 transition-colors">
+            <Link
+              href="/dashboard/history"
+              className="text-[12px] text-white/30 hover:text-white/60 transition-colors"
+            >
               View all →
             </Link>
           </div>
@@ -185,10 +190,18 @@ export default function DashboardOverview() {
                           : "text-red-400"
                     }`}
                   >
-                    {p.status === "approved" || p.status === "completed" ? "Complete" : p.status === "pending" ? "Pending" : "Denied"}
+                    {p.status === "approved" || p.status === "completed"
+                      ? "Complete"
+                      : p.status === "pending"
+                        ? "Pending"
+                        : "Denied"}
                   </span>
                   <span className="text-[12px] text-white/25 tabular-nums self-center">
-                    {new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {new Date(p.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </span>
                 </div>
               ))}

@@ -37,8 +37,16 @@ interface AgentData {
 }
 
 const AGENT_COLORS = [
-  "#1a1f36", "#533afe", "#0A8754", "#DF1B41", "#00A0D2",
-  "#F7B955", "#7C3AED", "#059669", "#DC2626", "#2563EB",
+  "#1a1f36",
+  "#533afe",
+  "#0A8754",
+  "#DF1B41",
+  "#00A0D2",
+  "#F7B955",
+  "#7C3AED",
+  "#059669",
+  "#DC2626",
+  "#2563EB",
 ];
 
 function getAgentColor(name: string): string {
@@ -49,18 +57,24 @@ function getAgentColor(name: string): string {
 
 function getHostIcon(hostName: string | null) {
   const name = (hostName ?? "").toLowerCase();
-  if (name.includes("local") || name.includes("device") || name.includes("desktop"))
-    return Monitor;
-  if (name.includes("cloud") || name.includes("aws") || name.includes("gcp") || name.includes("azure"))
+  if (name.includes("local") || name.includes("device") || name.includes("desktop")) return Monitor;
+  if (
+    name.includes("cloud") ||
+    name.includes("aws") ||
+    name.includes("gcp") ||
+    name.includes("azure")
+  )
     return Cloud;
-  if (name.includes("server") || name.includes("node"))
-    return Server;
-  if (name.includes("mobile") || name.includes("phone") || name.includes("ios") || name.includes("android"))
+  if (name.includes("server") || name.includes("node")) return Server;
+  if (
+    name.includes("mobile") ||
+    name.includes("phone") ||
+    name.includes("ios") ||
+    name.includes("android")
+  )
     return Smartphone;
-  if (name.includes("web") || name.includes("browser"))
-    return Globe;
-  if (name.includes("terminal") || name.includes("cli") || name.includes("shell"))
-    return Terminal;
+  if (name.includes("web") || name.includes("browser")) return Globe;
+  if (name.includes("terminal") || name.includes("cli") || name.includes("shell")) return Terminal;
   return Bot;
 }
 
@@ -130,8 +144,7 @@ function formatConstraintValue(field: string, value: unknown): string {
   const ops = value as Record<string, unknown>;
   const parts: string[] = [];
   if (ops.eq !== undefined) parts.push(`${ops.eq}`);
-  if (ops.in !== undefined && Array.isArray(ops.in))
-    parts.push(ops.in.map(String).join(", "));
+  if (ops.in !== undefined && Array.isArray(ops.in)) parts.push(ops.in.map(String).join(", "));
   if (ops.max !== undefined && ops.min !== undefined) parts.push(`${ops.min}–${ops.max}`);
   else {
     if (ops.max !== undefined) {
@@ -140,9 +153,7 @@ function formatConstraintValue(field: string, value: unknown): string {
     }
     if (ops.min !== undefined) parts.push(`min ${ops.min}`);
   }
-  return parts.length > 0
-    ? `${label}: ${parts.join(", ")}`
-    : `${label}: ${JSON.stringify(value)}`;
+  return parts.length > 0 ? `${label}: ${parts.join(", ")}` : `${label}: ${JSON.stringify(value)}`;
 }
 
 export default function AgentsPage() {
@@ -467,9 +478,7 @@ export default function AgentsPage() {
                   disabled={revoking === selected.agent_id}
                   className="flex w-full items-center justify-between py-3 text-[14px] text-red-600 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <span>
-                    {revoking === selected.agent_id ? "Revoking..." : "Revoke Agent"}
-                  </span>
+                  <span>{revoking === selected.agent_id ? "Revoking..." : "Revoke Agent"}</span>
                   <svg
                     className="h-4 w-4"
                     fill="none"

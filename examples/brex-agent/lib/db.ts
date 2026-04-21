@@ -1,11 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "./db/index";
-import {
-  brexConnection,
-  brexCard,
-  agentPayment,
-  agent,
-} from "./db/schema";
+import { brexConnection, brexCard, agentPayment, agent } from "./db/schema";
 
 export { db } from "./db/index";
 export * as schema from "./db/schema";
@@ -59,11 +54,7 @@ export async function getDefaultCard(userId: string) {
     .where(and(eq(brexCard.userId, userId), eq(brexCard.isDefault, true)))
     .limit(1);
   if (rows[0]) return rows[0];
-  const fallback = await db
-    .select()
-    .from(brexCard)
-    .where(eq(brexCard.userId, userId))
-    .limit(1);
+  const fallback = await db.select().from(brexCard).where(eq(brexCard.userId, userId)).limit(1);
   return fallback[0] ?? null;
 }
 
@@ -104,10 +95,7 @@ export async function syncCards(
 }
 
 export async function setDefaultCard(userId: string, cardId: string) {
-  await db
-    .update(brexCard)
-    .set({ isDefault: false })
-    .where(eq(brexCard.userId, userId));
+  await db.update(brexCard).set({ isDefault: false }).where(eq(brexCard.userId, userId));
   await db
     .update(brexCard)
     .set({ isDefault: true })
@@ -190,6 +178,10 @@ export async function listAllPayments(userId: string) {
 }
 
 export async function getAgentName(agentId: string): Promise<string> {
-  const rows = await db.select({ name: agent.name }).from(agent).where(eq(agent.id, agentId)).limit(1);
+  const rows = await db
+    .select({ name: agent.name })
+    .from(agent)
+    .where(eq(agent.id, agentId))
+    .limit(1);
   return rows[0]?.name ?? "Unknown Agent";
 }

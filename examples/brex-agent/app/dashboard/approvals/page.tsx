@@ -81,8 +81,12 @@ export default function ApprovalsPage() {
 
   const fetchAll = useCallback(async () => {
     const [approvalRes, paymentRes] = await Promise.all([
-      fetch("/api/auth/agent/ciba/pending").then((r) => r.json()).catch(() => ({ requests: [] })),
-      fetch("/api/payments").then((r) => r.json()).catch(() => ({ payments: [] })),
+      fetch("/api/auth/agent/ciba/pending")
+        .then((r) => r.json())
+        .catch(() => ({ requests: [] })),
+      fetch("/api/payments")
+        .then((r) => r.json())
+        .catch(() => ({ payments: [] })),
     ]);
     setAgentRequests(approvalRes.requests ?? []);
     setResolvedPayments((paymentRes.payments ?? []).filter((p: Payment) => p.status !== "pending"));
@@ -101,8 +105,13 @@ export default function ApprovalsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ approval_id: approvalId, action: "approve" }),
     });
-    if (res.ok) { toast.success("Approved"); fetchAll(); }
-    else { const d = await res.json(); toast.error(d.message ?? d.error_description ?? "Failed"); }
+    if (res.ok) {
+      toast.success("Approved");
+      fetchAll();
+    } else {
+      const d = await res.json();
+      toast.error(d.message ?? d.error_description ?? "Failed");
+    }
   }
 
   async function handleDeny(_agentId: string, approvalId: string) {
@@ -111,8 +120,10 @@ export default function ApprovalsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ approval_id: approvalId, action: "deny", reason: "Denied by user" }),
     });
-    if (res.ok) { toast.success("Denied"); fetchAll(); }
-    else toast.error("Failed to deny");
+    if (res.ok) {
+      toast.success("Denied");
+      fetchAll();
+    } else toast.error("Failed to deny");
   }
 
   return (
@@ -125,7 +136,10 @@ export default function ApprovalsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-lg border border-white/[0.08] bg-white/[0.02] animate-pulse" />
+            <div
+              key={i}
+              className="h-24 rounded-lg border border-white/[0.08] bg-white/[0.02] animate-pulse"
+            />
           ))}
         </div>
       ) : (
@@ -152,7 +166,10 @@ export default function ApprovalsPage() {
 
                 if (hasPayCap && payInfo) {
                   return (
-                    <div key={r.approval_id} className="rounded-lg border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+                    <div
+                      key={r.approval_id}
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] overflow-hidden"
+                    >
                       {/* Payment header */}
                       <div className="px-5 py-4">
                         <div className="flex items-start justify-between">
@@ -165,7 +182,9 @@ export default function ApprovalsPage() {
                                 {r.agent_name ?? "Agent"} wants to pay
                               </p>
                               {r.binding_message && (
-                                <p className="text-[13px] text-white/40 mt-0.5">{r.binding_message}</p>
+                                <p className="text-[13px] text-white/40 mt-0.5">
+                                  {r.binding_message}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -179,7 +198,9 @@ export default function ApprovalsPage() {
                       <div className="mx-5 mb-4 rounded-lg border border-white/[0.08] bg-white/[0.02] p-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Amount</p>
+                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">
+                              Amount
+                            </p>
                             <p className="text-[32px] font-semibold tabular-nums leading-tight mt-0.5">
                               {payInfo.amount ?? "—"}
                             </p>
@@ -189,12 +210,20 @@ export default function ApprovalsPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Merchant</p>
-                            <p className="text-[14px] font-medium mt-0.5">{payInfo.merchant ?? "—"}</p>
+                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">
+                              Merchant
+                            </p>
+                            <p className="text-[14px] font-medium mt-0.5">
+                              {payInfo.merchant ?? "—"}
+                            </p>
                           </div>
                           <div>
-                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Currency</p>
-                            <p className="text-[14px] font-medium mt-0.5">{payInfo.currency ?? "USD"}</p>
+                            <p className="text-[11px] text-white/30 uppercase tracking-wider font-medium">
+                              Currency
+                            </p>
+                            <p className="text-[14px] font-medium mt-0.5">
+                              {payInfo.currency ?? "USD"}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -202,10 +231,15 @@ export default function ApprovalsPage() {
                       {/* Other capabilities if any */}
                       {otherCaps.length > 0 && (
                         <div className="mx-5 mb-4">
-                          <p className="text-[10px] font-medium text-white/25 uppercase tracking-wider mb-1.5">Also requesting</p>
+                          <p className="text-[10px] font-medium text-white/25 uppercase tracking-wider mb-1.5">
+                            Also requesting
+                          </p>
                           <div className="flex flex-wrap gap-1.5">
                             {otherCaps.map((cap) => (
-                              <span key={cap} className="text-[11px] font-mono rounded bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-white/50">
+                              <span
+                                key={cap}
+                                className="text-[11px] font-mono rounded bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-white/50"
+                              >
                                 {cap}
                               </span>
                             ))}
@@ -237,16 +271,23 @@ export default function ApprovalsPage() {
 
                 // Generic capability request (no brex.pay)
                 return (
-                  <div key={r.approval_id} className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
+                  <div
+                    key={r.approval_id}
+                    className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-start gap-2.5">
                         <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-500/15 shrink-0 mt-0.5">
                           <AgentIcon className="h-4 w-4 text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-[14px] font-semibold">{r.agent_name ?? "Unknown Agent"}</p>
+                          <p className="text-[14px] font-semibold">
+                            {r.agent_name ?? "Unknown Agent"}
+                          </p>
                           {r.binding_message && (
-                            <p className="text-[13px] text-white/40 mt-0.5 italic">&ldquo;{r.binding_message}&rdquo;</p>
+                            <p className="text-[13px] text-white/40 mt-0.5 italic">
+                              &ldquo;{r.binding_message}&rdquo;
+                            </p>
                           )}
                         </div>
                       </div>
@@ -257,10 +298,15 @@ export default function ApprovalsPage() {
 
                     {r.capabilities.length > 0 && (
                       <div className="mb-3 ml-[42px]">
-                        <p className="text-[10px] font-medium text-white/25 uppercase tracking-wider mb-1.5">Requested Capabilities</p>
+                        <p className="text-[10px] font-medium text-white/25 uppercase tracking-wider mb-1.5">
+                          Requested Capabilities
+                        </p>
                         <div className="flex flex-wrap gap-1.5">
                           {r.capabilities.map((cap) => (
-                            <span key={cap} className="text-[11px] font-mono rounded bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-white/60">
+                            <span
+                              key={cap}
+                              className="text-[11px] font-mono rounded bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-white/60"
+                            >
                               {cap}
                             </span>
                           ))}
@@ -269,14 +315,20 @@ export default function ApprovalsPage() {
                     )}
 
                     <div className="flex items-center justify-between ml-[42px]">
-                      <span className="text-[11px] text-white/20 font-mono">{r.agent_id ?? r.approval_id}</span>
+                      <span className="text-[11px] text-white/20 font-mono">
+                        {r.agent_id ?? r.approval_id}
+                      </span>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleDeny(r.agent_id!, r.approval_id)}
-                          className="px-3 py-1.5 text-[12px] font-medium rounded-md border border-white/[0.1] text-white/50 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer">
+                        <button
+                          onClick={() => handleDeny(r.agent_id!, r.approval_id)}
+                          className="px-3 py-1.5 text-[12px] font-medium rounded-md border border-white/[0.1] text-white/50 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
+                        >
                           Deny
                         </button>
-                        <button onClick={() => handleApprove(r.agent_id!, r.approval_id)}
-                          className="px-3 py-1.5 text-[12px] font-medium rounded-md bg-white text-black hover:bg-white/90 transition-all active:scale-[0.98] cursor-pointer">
+                        <button
+                          onClick={() => handleApprove(r.agent_id!, r.approval_id)}
+                          className="px-3 py-1.5 text-[12px] font-medium rounded-md bg-white text-black hover:bg-white/90 transition-all active:scale-[0.98] cursor-pointer"
+                        >
                           Approve
                         </button>
                       </div>
@@ -296,14 +348,25 @@ export default function ApprovalsPage() {
           ) : (
             <div className="rounded-lg border border-white/[0.08] overflow-hidden">
               {resolvedPayments.map((p, idx) => (
-                <div key={p.id} className={`flex items-center gap-4 px-4 py-3 ${idx > 0 ? "border-t border-white/[0.06]" : ""}`}>
+                <div
+                  key={p.id}
+                  className={`flex items-center gap-4 px-4 py-3 ${idx > 0 ? "border-t border-white/[0.06]" : ""}`}
+                >
                   <div className="flex-1 min-w-0">
                     <span className="text-[13px] font-medium">{p.merchantName}</span>
                     <span className="text-[12px] text-white/25 ml-2">{p.itemDescription}</span>
                   </div>
-                  <span className="text-[13px] font-medium tabular-nums">${(p.amountCents / 100).toFixed(2)}</span>
-                  {p.brexCardLast4 && <span className="text-[11px] text-white/20 font-mono">•••• {p.brexCardLast4}</span>}
-                  <span className={`text-[11px] font-medium ${p.status === "approved" || p.status === "completed" ? "text-emerald-400" : "text-red-400"}`}>
+                  <span className="text-[13px] font-medium tabular-nums">
+                    ${(p.amountCents / 100).toFixed(2)}
+                  </span>
+                  {p.brexCardLast4 && (
+                    <span className="text-[11px] text-white/20 font-mono">
+                      •••• {p.brexCardLast4}
+                    </span>
+                  )}
+                  <span
+                    className={`text-[11px] font-medium ${p.status === "approved" || p.status === "completed" ? "text-emerald-400" : "text-red-400"}`}
+                  >
                     {p.status === "approved" || p.status === "completed" ? "Complete" : "Denied"}
                   </span>
                 </div>

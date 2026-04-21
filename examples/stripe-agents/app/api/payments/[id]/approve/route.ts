@@ -13,8 +13,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const payment = await getPayment(id);
 
   if (!payment) return Response.json({ error: "Payment not found" }, { status: 404 });
-  if (payment.userId !== session.user.id) return Response.json({ error: "Forbidden" }, { status: 403 });
-  if (payment.status !== "pending") return Response.json({ error: "Payment already resolved" }, { status: 400 });
+  if (payment.userId !== session.user.id)
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  if (payment.status !== "pending")
+    return Response.json({ error: "Payment already resolved" }, { status: 400 });
 
   const card = body.cardId
     ? await getCardById(body.cardId, session.user.id)
