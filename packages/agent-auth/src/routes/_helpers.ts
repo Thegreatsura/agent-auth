@@ -83,10 +83,11 @@ export function resolveDeviceAuthPage(opts: ResolvedAgentAuthOptions, origin: st
 }
 
 /**
- * Resolve a host by the `iss` claim of a host JWT. Per spec §4.2 `iss` is
- * the JWK thumbprint, which lives in the `id` column for hosts created
- * with a public key up front, and in the `kid` column for hosts created
- * via the enrollment-token flow. Mirrors the middleware's host lookup.
+ * Resolve a host by the `iss` claim of a host JWT, matching the middleware.
+ *
+ * SDK-signed JWTs use `iss = JWK thumbprint` (spec §4.2), stored in `kid`.
+ * The `id` lookup is a liberal fallback for hand-crafted callers that sign
+ * with the host's UUID instead — tightening it to kid-only is a follow-up.
  */
 export async function findHostByIdOrKid(
   adapter: AdapterFindOne,
