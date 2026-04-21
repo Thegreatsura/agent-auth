@@ -27,18 +27,26 @@ function StatusTracker({ status }: { status: string }) {
         const active = idx === currentIdx;
         return (
           <div key={step} className="flex items-center gap-1">
-            <div className={`flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-bold ${
-              done
-                ? active ? "bg-foreground text-background" : "bg-emerald-500 text-white"
-                : "bg-foreground/[0.06] text-foreground/30"
-            }`}>
+            <div
+              className={`flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-bold ${
+                done
+                  ? active
+                    ? "bg-foreground text-background"
+                    : "bg-emerald-500 text-white"
+                  : "bg-foreground/[0.06] text-foreground/30"
+              }`}
+            >
               {done && !active ? "✓" : idx + 1}
             </div>
-            <span className={`text-[11px] capitalize ${done ? "text-foreground/70 font-medium" : "text-foreground/30"}`}>
+            <span
+              className={`text-[11px] capitalize ${done ? "text-foreground/70 font-medium" : "text-foreground/30"}`}
+            >
               {step}
             </span>
             {idx < STATUS_STEPS.length - 1 && (
-              <div className={`w-6 h-px mx-1 ${idx < currentIdx ? "bg-emerald-500" : "bg-foreground/10"}`} />
+              <div
+                className={`w-6 h-px mx-1 ${idx < currentIdx ? "bg-emerald-500" : "bg-foreground/10"}`}
+              />
             )}
           </div>
         );
@@ -89,13 +97,20 @@ export default function OrdersPage() {
           {orders.map((o) => {
             const isExpanded = expanded === o.id;
             const delivery = o.estimatedDelivery
-              ? new Date(o.estimatedDelivery).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+              ? new Date(o.estimatedDelivery).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })
               : null;
 
             return (
-              <div key={o.id} className={`rounded-lg border transition-all ${
-                isExpanded ? "border-foreground/20" : "border-border hover:border-foreground/10"
-              }`}>
+              <div
+                key={o.id}
+                className={`rounded-lg border transition-all ${
+                  isExpanded ? "border-foreground/20" : "border-border hover:border-foreground/10"
+                }`}
+              >
                 <button
                   onClick={() => setExpanded(isExpanded ? null : o.id)}
                   className="flex w-full items-center gap-4 px-4 py-3.5 text-left cursor-pointer"
@@ -119,17 +134,23 @@ export default function OrdersPage() {
                       {o.trackingNumber && (
                         <>
                           <span className="text-foreground/15">·</span>
-                          <span className="text-[11px] text-foreground/35 font-mono">{o.trackingNumber}</span>
+                          <span className="text-[11px] text-foreground/35 font-mono">
+                            {o.trackingNumber}
+                          </span>
                         </>
                       )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className={`text-[11px] font-medium capitalize ${
-                      o.status === "delivered" ? "text-emerald-600 dark:text-emerald-400"
-                      : o.status === "shipped" ? "text-blue-600 dark:text-blue-400"
-                      : "text-foreground/50"
-                    }`}>
+                    <span
+                      className={`text-[11px] font-medium capitalize ${
+                        o.status === "delivered"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : o.status === "shipped"
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-foreground/50"
+                      }`}
+                    >
                       {o.status}
                     </span>
                     {delivery && (
@@ -138,9 +159,18 @@ export default function OrdersPage() {
                       </p>
                     )}
                   </div>
-                  <svg className={`h-4 w-4 text-foreground/20 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className={`h-4 w-4 text-foreground/20 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
@@ -150,29 +180,49 @@ export default function OrdersPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-md bg-foreground/[0.03] px-3 py-2">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">Order ID</span>
+                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">
+                          Order ID
+                        </span>
                         <code className="text-[12px] font-mono text-foreground/60">{o.id}</code>
                       </div>
                       <div className="rounded-md bg-foreground/[0.03] px-3 py-2">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">Tracking</span>
-                        <code className="text-[12px] font-mono text-foreground/60">{o.trackingNumber ?? "—"}</code>
+                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">
+                          Tracking
+                        </span>
+                        <code className="text-[12px] font-mono text-foreground/60">
+                          {o.trackingNumber ?? "—"}
+                        </code>
                       </div>
                       <div className="rounded-md bg-foreground/[0.03] px-3 py-2">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">Ordered</span>
+                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">
+                          Ordered
+                        </span>
                         <span className="text-[12px] text-foreground/60">
-                          {new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+                          {new Date(o.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
                         </span>
                       </div>
                       <div className="rounded-md bg-foreground/[0.03] px-3 py-2">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">Est. Delivery</span>
+                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">
+                          Est. Delivery
+                        </span>
                         <span className="text-[12px] text-foreground/60">{delivery ?? "—"}</span>
                       </div>
                     </div>
 
                     {o.agentId && (
                       <div className="rounded-md bg-foreground/[0.03] px-3 py-2">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">Placed by Agent</span>
-                        <code className="text-[12px] font-mono text-foreground/60">{o.agentId}</code>
+                        <span className="text-[10px] uppercase tracking-wider text-foreground/30 font-medium block">
+                          Placed by Agent
+                        </span>
+                        <code className="text-[12px] font-mono text-foreground/60">
+                          {o.agentId}
+                        </code>
                       </div>
                     )}
                   </div>

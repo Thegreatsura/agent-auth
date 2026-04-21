@@ -68,10 +68,7 @@ export default function CatalogPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-border p-5 animate-pulse"
-              >
+              <div key={i} className="rounded-lg border border-border p-5 animate-pulse">
                 <div className="h-4 w-40 bg-foreground/[0.06] rounded mb-3" />
                 <div className="h-3 w-full bg-foreground/[0.04] rounded mb-2" />
                 <div className="h-3 w-24 bg-foreground/[0.04] rounded" />
@@ -122,13 +119,11 @@ export default function CatalogPage() {
           </p>
           <div className="bg-foreground/[0.03] rounded-md p-3 font-mono text-[12px] text-foreground/60">
             <div className="text-foreground/30 mb-1"># Browse products</div>
-            <div>
-              curl &lt;origin&gt;/api/products
+            <div>curl &lt;origin&gt;/api/products</div>
+            <div className="text-foreground/30 mt-3 mb-1">
+              # Buy a product (returns 402 MPP challenge)
             </div>
-            <div className="text-foreground/30 mt-3 mb-1"># Buy a product (returns 402 MPP challenge)</div>
-            <div>
-              curl -X POST &lt;origin&gt;/api/products/ethiopian-yirgacheffe/buy
-            </div>
+            <div>curl -X POST &lt;origin&gt;/api/products/ethiopian-yirgacheffe/buy</div>
           </div>
         </div>
       </main>

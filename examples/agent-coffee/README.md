@@ -26,13 +26,11 @@ Runs on **[http://localhost:3300](http://localhost:3300)**.
 
 ## API Endpoints
 
-
 | Method | Path                       | Description                                       |
 | ------ | -------------------------- | ------------------------------------------------- |
 | GET    | `/api/products`            | List all coffee products                          |
 | POST   | `/api/products/[slug]/buy` | Buy a product (MPP-gated — returns 402 challenge) |
 | GET    | `/api/orders`              | List all orders                                   |
-
 
 ## How MPP Works
 
@@ -44,7 +42,6 @@ Runs on **[http://localhost:3300](http://localhost:3300)**.
 
 ## Products
 
-
 | Name                  | Price  | Origin                | Roast  |
 | --------------------- | ------ | --------------------- | ------ |
 | Ethiopian Yirgacheffe | $18.00 | Yirgacheffe, Ethiopia | Light  |
@@ -52,5 +49,3 @@ Runs on **[http://localhost:3300](http://localhost:3300)**.
 | Sumatra Mandheling    | $20.00 | Mandheling, Sumatra   | Dark   |
 | Guatemala Antigua     | $17.00 | Antigua, Guatemala    | Medium |
 | Kenya AA              | $22.00 | Nyeri, Kenya          | Light  |
-
-

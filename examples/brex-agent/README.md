@@ -36,29 +36,31 @@ Runs on **http://localhost:3400**.
 
 ## Agent Auth Capabilities
 
-| Capability | Description | Requires Approval |
-|-----------|-------------|-------------------|
-| `brex.balance` | Check Brex account balance | No (auto-approved) |
-| `brex.pay` | Request payment — creates pending approval | Yes (per execution) |
-| `brex.history` | View past payment history | No (auto-approved) |
+| Capability     | Description                                | Requires Approval   |
+| -------------- | ------------------------------------------ | ------------------- |
+| `brex.balance` | Check Brex account balance                 | No (auto-approved)  |
+| `brex.pay`     | Request payment — creates pending approval | Yes (per execution) |
+| `brex.history` | View past payment history                  | No (auto-approved)  |
 
 ## API Endpoints
 
 ### Agent-facing (Agent Auth bearer token)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/payments/[id]` | Poll payment status (pending/approved/denied) |
+
+| Method | Path                 | Description                                   |
+| ------ | -------------------- | --------------------------------------------- |
+| GET    | `/api/payments/[id]` | Poll payment status (pending/approved/denied) |
 
 ### Human-facing (session auth)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/payments` | List all payments |
-| POST | `/api/payments/[id]/approve` | Approve payment (creates Brex card → Stripe PM → SPT) |
-| POST | `/api/payments/[id]/deny` | Deny payment |
-| POST | `/api/brex/connect` | Connect Brex account (API token) |
-| GET | `/api/brex/balance` | Get Brex cash balance |
-| GET | `/api/brex/cards` | List synced cards |
-| PUT | `/api/brex/cards` | Set default card |
+
+| Method | Path                         | Description                                           |
+| ------ | ---------------------------- | ----------------------------------------------------- |
+| GET    | `/api/payments`              | List all payments                                     |
+| POST   | `/api/payments/[id]/approve` | Approve payment (creates Brex card → Stripe PM → SPT) |
+| POST   | `/api/payments/[id]/deny`    | Deny payment                                          |
+| POST   | `/api/brex/connect`          | Connect Brex account (API token)                      |
+| GET    | `/api/brex/balance`          | Get Brex cash balance                                 |
+| GET    | `/api/brex/cards`            | List synced cards                                     |
+| PUT    | `/api/brex/cards`            | Set default card                                      |
 
 ## Demo Flow
 

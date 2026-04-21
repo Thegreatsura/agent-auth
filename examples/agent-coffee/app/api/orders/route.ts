@@ -12,7 +12,10 @@ export async function GET(req: Request) {
   const scope = url.searchParams.get("scope");
 
   if (scope === "all") {
-    const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
     if (adminEmails.length > 0 && !adminEmails.includes(session.user.email)) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }

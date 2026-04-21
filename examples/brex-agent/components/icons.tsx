@@ -15,7 +15,15 @@ export function BrexLogo({ className }: { className?: string }) {
 
 export function AgentIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="11" width="18" height="10" rx="2" />
       <circle cx="9" cy="16" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="15" cy="16" r="1.5" fill="currentColor" stroke="none" />

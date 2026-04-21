@@ -4,8 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 const AGENT_COLORS = [
-  "#1a1f36", "#533afe", "#0A8754", "#DF1B41", "#00A0D2",
-  "#F7B955", "#7C3AED", "#059669", "#DC2626", "#2563EB",
+  "#1a1f36",
+  "#533afe",
+  "#0A8754",
+  "#DF1B41",
+  "#00A0D2",
+  "#F7B955",
+  "#7C3AED",
+  "#059669",
+  "#DC2626",
+  "#2563EB",
 ];
 
 function AgentAvatar({ name }: { name: string }) {
@@ -115,8 +123,7 @@ function PaymentCard({
       <div
         className="relative overflow-hidden rounded-xl text-white shadow-md"
         style={{
-          background:
-            "linear-gradient(135deg, #2a2a2e 0%, #1c1c1f 30%, #18181b 65%, #111113 100%)",
+          background: "linear-gradient(135deg, #2a2a2e 0%, #1c1c1f 30%, #18181b 65%, #111113 100%)",
         }}
       >
         <div
@@ -131,7 +138,16 @@ function PaymentCard({
             <div className="flex-1 p-4 pr-0">
               <div className="flex items-center gap-2.5 mb-3">
                 <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
-                  <rect x="0.5" y="0.5" width="27" height="21" rx="2.5" fill="url(#chipG)" stroke="#c9a84c" strokeWidth="0.75" />
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="27"
+                    height="21"
+                    rx="2.5"
+                    fill="url(#chipG)"
+                    stroke="#c9a84c"
+                    strokeWidth="0.75"
+                  />
                   <line x1="0" y1="8" x2="28" y2="8" stroke="#c9a84c" strokeWidth="0.5" />
                   <line x1="0" y1="14" x2="28" y2="14" stroke="#c9a84c" strokeWidth="0.5" />
                   <line x1="9.5" y1="0" x2="9.5" y2="8" stroke="#c9a84c" strokeWidth="0.5" />
@@ -146,7 +162,16 @@ function PaymentCard({
                     </linearGradient>
                   </defs>
                 </svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.25" strokeLinecap="round" strokeOpacity="0.45">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.25"
+                  strokeLinecap="round"
+                  strokeOpacity="0.45"
+                >
                   <path d="M8.5 16.5a5 5 0 0 1 0-9" />
                   <path d="M12 19a8 8 0 0 0 0-14" />
                 </svg>
@@ -222,9 +247,7 @@ export default function ApprovalsPage() {
         .catch(() => ({ cards: [] })),
     ]);
     setAgentRequests(approvalRes.requests ?? []);
-    setResolvedPayments(
-      (paymentRes.payments ?? []).filter((p: Payment) => p.status !== "pending"),
-    );
+    setResolvedPayments((paymentRes.payments ?? []).filter((p: Payment) => p.status !== "pending"));
     const allCards = cardsRes.cards ?? [];
     setCards(allCards);
     if (!selectedCardId && allCards.length > 0) {
@@ -320,10 +343,10 @@ export default function ApprovalsPage() {
                         className="rounded-xl border border-border bg-white overflow-hidden"
                       >
                         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border">
-                        <AgentAvatar name={r.agent_name ?? "Agent"} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[14px] font-semibold text-foreground truncate">
-                            {r.agent_name ?? "Agent"}
+                          <AgentAvatar name={r.agent_name ?? "Agent"} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-semibold text-foreground truncate">
+                              {r.agent_name ?? "Agent"}
                             </p>
                             {r.binding_message && (
                               <p className="text-[12px] text-muted-foreground truncate">
@@ -332,9 +355,7 @@ export default function ApprovalsPage() {
                             )}
                           </div>
                           <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
-                            {r.expires_in > 0
-                              ? `${Math.floor(r.expires_in / 60)}m`
-                              : "expired"}
+                            {r.expires_in > 0 ? `${Math.floor(r.expires_in / 60)}m` : "expired"}
                           </span>
                         </div>
 
@@ -346,9 +367,7 @@ export default function ApprovalsPage() {
                             reason={
                               r.capability_reasons &&
                               Object.values(r.capability_reasons).some(Boolean)
-                                ? Object.values(r.capability_reasons)
-                                    .filter(Boolean)
-                                    .join(" — ")
+                                ? Object.values(r.capability_reasons).filter(Boolean).join(" — ")
                                 : null
                             }
                           />
@@ -389,7 +408,9 @@ export default function ApprovalsPage() {
                           <div className="px-5 py-2.5 border-t border-border">
                             {hasCards ? (
                               <div className="flex items-center gap-2">
-                                <span className="text-[11px] text-muted-foreground shrink-0">Pay with</span>
+                                <span className="text-[11px] text-muted-foreground shrink-0">
+                                  Pay with
+                                </span>
                                 <select
                                   value={selectedCardId ?? ""}
                                   onChange={(e) => setSelectedCardId(e.target.value)}
@@ -397,7 +418,8 @@ export default function ApprovalsPage() {
                                 >
                                   {cards.map((c) => (
                                     <option key={c.id} value={c.id}>
-                                      {c.brand} •••• {c.last4}{c.isDefault ? " (default)" : ""}
+                                      {c.brand} •••• {c.last4}
+                                      {c.isDefault ? " (default)" : ""}
                                     </option>
                                   ))}
                                 </select>
@@ -407,8 +429,18 @@ export default function ApprovalsPage() {
                                 href="/dashboard/wallet"
                                 className="flex items-center justify-center gap-1.5 text-[12px] font-medium text-primary hover:text-primary/80 transition-colors"
                               >
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                <svg
+                                  className="h-3.5 w-3.5"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 4v16m8-8H4"
+                                  />
                                 </svg>
                                 Add a card to approve payments
                               </a>
@@ -458,9 +490,7 @@ export default function ApprovalsPage() {
                           )}
                         </div>
                         <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
-                          {r.expires_in > 0
-                            ? `${Math.floor(r.expires_in / 60)}m`
-                            : "expired"}
+                          {r.expires_in > 0 ? `${Math.floor(r.expires_in / 60)}m` : "expired"}
                         </span>
                       </div>
 
@@ -472,9 +502,7 @@ export default function ApprovalsPage() {
                                 Reason
                               </p>
                               <p className="text-[13px] text-foreground leading-relaxed">
-                                {Object.values(r.capability_reasons)
-                                  .filter(Boolean)
-                                  .join(" — ")}
+                                {Object.values(r.capability_reasons).filter(Boolean).join(" — ")}
                               </p>
                             </div>
                           )}
@@ -514,7 +542,9 @@ export default function ApprovalsPage() {
                         <div className="px-5 py-2.5 border-t border-border">
                           {hasCards ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-muted-foreground shrink-0">Pay with</span>
+                              <span className="text-[11px] text-muted-foreground shrink-0">
+                                Pay with
+                              </span>
                               <select
                                 value={selectedCardId ?? ""}
                                 onChange={(e) => setSelectedCardId(e.target.value)}
@@ -522,7 +552,8 @@ export default function ApprovalsPage() {
                               >
                                 {cards.map((c) => (
                                   <option key={c.id} value={c.id}>
-                                    {c.brand} •••• {c.last4}{c.isDefault ? " (default)" : ""}
+                                    {c.brand} •••• {c.last4}
+                                    {c.isDefault ? " (default)" : ""}
                                   </option>
                                 ))}
                               </select>
@@ -532,8 +563,18 @@ export default function ApprovalsPage() {
                               href="/dashboard/wallet"
                               className="flex items-center justify-center gap-1.5 text-[12px] font-medium text-primary hover:text-primary/80 transition-colors"
                             >
-                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 4v16m8-8H4"
+                                />
                               </svg>
                               Add a card to approve payments
                             </a>
@@ -604,9 +645,7 @@ export default function ApprovalsPage() {
                           : "bg-red-50 text-red-700"
                       }`}
                     >
-                      {p.status === "approved" || p.status === "completed"
-                        ? "Complete"
-                        : "Denied"}
+                      {p.status === "approved" || p.status === "completed" ? "Complete" : "Denied"}
                     </span>
                   </div>
                 ))}

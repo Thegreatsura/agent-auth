@@ -95,7 +95,10 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {orders.map((o) => (
-                  <tr key={o.id} className="border-b border-border last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                  <tr
+                    key={o.id}
+                    className="border-b border-border last:border-0 hover:bg-foreground/[0.02] transition-colors"
+                  >
                     <td className="px-4 py-3">
                       <code className="text-[12px] font-mono text-foreground/60">{o.id}</code>
                     </td>

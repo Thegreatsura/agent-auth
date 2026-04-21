@@ -7,7 +7,8 @@ import { db, schema } from "./db";
 import { listProducts, getProductBySlug, listAgentOrders, getOrder, createOrder } from "./db";
 import { mppx } from "./mpp";
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://agent-coffee.localhost";
+const BASE_URL =
+  process.env.BETTER_AUTH_URL ?? process.env.PORTLESS_URL ?? "http://agent-coffee.localhost";
 const STRIPE_AGENTS_URL = process.env.STRIPE_AGENTS_URL ?? "http://stripe-agents.localhost";
 
 const capabilities: Capability[] = [
@@ -34,7 +35,10 @@ const capabilities: Capability[] = [
               priceCents: { type: "number" },
               origin: { type: "string" },
               roastLevel: { type: "string" },
-              buyUrl: { type: "string", description: "Direct MPP endpoint — POST for 402 challenge (for HTTP clients)" },
+              buyUrl: {
+                type: "string",
+                description: "Direct MPP endpoint — POST for 402 challenge (for HTTP clients)",
+              },
             },
           },
         },
@@ -61,7 +65,10 @@ const capabilities: Capability[] = [
         origin: { type: "string" },
         roastLevel: { type: "string" },
         inStock: { type: "boolean" },
-        buyUrl: { type: "string", description: "Direct MPP endpoint — POST for 402 challenge (for HTTP clients)" },
+        buyUrl: {
+          type: "string",
+          description: "Direct MPP endpoint — POST for 402 challenge (for HTTP clients)",
+        },
       },
     },
   },
@@ -76,7 +83,11 @@ const capabilities: Capability[] = [
       type: "object",
       properties: {
         slug: { type: "string", description: "Product slug (e.g. ethiopian-yirgacheffe)" },
-        credential: { type: "string", description: "MPP credential (SPT token) from payment provider. Omit on first call to get the payment challenge." },
+        credential: {
+          type: "string",
+          description:
+            "MPP credential (SPT token) from payment provider. Omit on first call to get the payment challenge.",
+        },
       },
       required: ["slug"],
     },
@@ -84,13 +95,21 @@ const capabilities: Capability[] = [
       type: "object",
       properties: {
         status: { type: "string", description: "'payment_required' or 'order_confirmed'" },
-        challenge: { type: "object", description: "MPP 402 challenge (when status=payment_required)" },
+        challenge: {
+          type: "object",
+          description: "MPP 402 challenge (when status=payment_required)",
+        },
         paymentProvider: {
           type: "object",
-          description: "Accepted payment provider (when status=payment_required). Discover it at the URL to find its 'pay' capability.",
+          description:
+            "Accepted payment provider (when status=payment_required). Discover it at the URL to find its 'pay' capability.",
           properties: {
             name: { type: "string", description: "Payment provider name" },
-            url: { type: "string", description: "Base URL — fetch /.well-known/agent-configuration to discover capabilities" },
+            url: {
+              type: "string",
+              description:
+                "Base URL — fetch /.well-known/agent-configuration to discover capabilities",
+            },
           },
         },
         order: { type: "object", description: "Order details (when status=order_confirmed)" },
@@ -106,7 +125,10 @@ const capabilities: Capability[] = [
       type: "object",
       properties: {
         slug: { type: "string", description: "Product slug (e.g. ethiopian-yirgacheffe)" },
-        paymentReference: { type: "string", description: "Stripe PaymentIntent ID (pi_...) from Agent Pay" },
+        paymentReference: {
+          type: "string",
+          description: "Stripe PaymentIntent ID (pi_...) from Agent Pay",
+        },
       },
       required: ["slug", "paymentReference"],
     },
@@ -189,12 +211,9 @@ export const auth = betterAuth({
       onAutonomousAgentClaimed: async ({ agentId, userId }) => {
         const { eq } = await import("drizzle-orm");
         const { order } = await import("./db/schema");
-        await db
-          .update(order)
-          .set({ userId })
-          .where(eq(order.agentId, agentId));
+        await db.update(order).set({ userId }).where(eq(order.agentId, agentId));
       },
-      onExecute: async ({ capability, arguments: args, agentSession,  ctx }) => {
+      onExecute: async ({ capability, arguments: args, agentSession, ctx }) => {
         const agentId = agentSession.agent.id;
 
         switch (capability) {
@@ -262,7 +281,10 @@ export const auth = betterAuth({
                 paymentProvider: {
                   name: "Stripe Agents",
                   url: STRIPE_AGENTS_URL,
-                  description: "Discover this provider's 'pay' capability at " + STRIPE_AGENTS_URL + "/.well-known/agent-configuration — pass the challenge object to obtain a credential.",
+                  description:
+                    "Discover this provider's 'pay' capability at " +
+                    STRIPE_AGENTS_URL +
+                    "/.well-known/agent-configuration — pass the challenge object to obtain a credential.",
                 },
               };
             }
@@ -297,17 +319,19 @@ export const auth = betterAuth({
               const o = await getOrder(String(args.orderId));
               if (!o || o.agentId !== agentId) throw new Error("Order not found");
               return {
-                orders: [{
-                  id: o.id,
-                  productName: o.productName,
-                  amountCents: o.amountCents,
-                  status: o.status,
-                  trackingNumber: o.trackingNumber,
-                  estimatedDelivery: o.estimatedDelivery,
-                  shippedAt: o.shippedAt,
-                  deliveredAt: o.deliveredAt,
-                  createdAt: o.createdAt,
-                }],
+                orders: [
+                  {
+                    id: o.id,
+                    productName: o.productName,
+                    amountCents: o.amountCents,
+                    status: o.status,
+                    trackingNumber: o.trackingNumber,
+                    estimatedDelivery: o.estimatedDelivery,
+                    shippedAt: o.shippedAt,
+                    deliveredAt: o.deliveredAt,
+                    createdAt: o.createdAt,
+                  },
+                ],
               };
             }
             const orders = await listAgentOrders(agentId);

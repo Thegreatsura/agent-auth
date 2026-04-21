@@ -31,12 +31,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[14px] font-semibold tracking-tight">Agent Coffee Shop</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-[12px] text-foreground/40 hover:text-foreground transition-colors">
+              <Link
+                href="/"
+                className="text-[12px] text-foreground/40 hover:text-foreground transition-colors"
+              >
                 Catalog
               </Link>
               <span className="text-[12px] text-foreground/40">{session.user.email}</span>
-              <button onClick={() => signOut().then(() => router.push("/"))}
-                className="text-[12px] text-foreground/40 hover:text-foreground transition-colors cursor-pointer">
+              <button
+                onClick={() => signOut().then(() => router.push("/"))}
+                className="text-[12px] text-foreground/40 hover:text-foreground transition-colors cursor-pointer"
+              >
                 Sign out
               </button>
             </div>
@@ -45,10 +50,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {NAV.map((item) => {
               const active = pathname === item.href;
               return (
-                <Link key={item.href} href={item.href}
+                <Link
+                  key={item.href}
+                  href={item.href}
                   className={`px-3 py-2 text-[13px] font-medium border-b-2 transition-colors ${
-                    active ? "border-foreground text-foreground" : "border-transparent text-foreground/45 hover:text-foreground/70"
-                  }`}>
+                    active
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-foreground/45 hover:text-foreground/70"
+                  }`}
+                >
                   {item.label}
                 </Link>
               );

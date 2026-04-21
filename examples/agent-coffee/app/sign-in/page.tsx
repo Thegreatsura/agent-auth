@@ -23,10 +23,14 @@ export default function SignInPage() {
     setLoading(true);
     setError("");
     try {
-      const res = mode === "signup"
-        ? await signUp.email({ email, password, name })
-        : await signIn.email({ email, password });
-      if (res.error) { setError(res.error.message ?? "Failed"); return; }
+      const res =
+        mode === "signup"
+          ? await signUp.email({ email, password, name })
+          : await signIn.email({ email, password });
+      if (res.error) {
+        setError(res.error.message ?? "Failed");
+        return;
+      }
       router.push("/dashboard");
     } finally {
       setLoading(false);
@@ -47,22 +51,47 @@ export default function SignInPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "signup" && (
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required
-              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20" />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name"
+              required
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20"
+            />
           )}
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required
-            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required minLength={8}
-            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            minLength={8}
+            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 text-[13px] outline-none focus:border-foreground/20"
+          />
           {error && <p className="text-[12px] text-red-500 px-1">{error}</p>}
-          <button type="submit" disabled={loading}
-            className="w-full py-2.5 text-[13px] font-medium rounded-lg bg-foreground text-background hover:opacity-90 disabled:opacity-50 cursor-pointer">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 text-[13px] font-medium rounded-lg bg-foreground text-background hover:opacity-90 disabled:opacity-50 cursor-pointer"
+          >
             {loading ? "..." : mode === "signin" ? "Sign In" : "Sign Up"}
           </button>
         </form>
         <p className="mt-4 text-center text-[12px] text-foreground/40">
           {mode === "signin" ? "No account?" : "Already have one?"}{" "}
-          <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="underline cursor-pointer">
+          <button
+            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            className="underline cursor-pointer"
+          >
             {mode === "signin" ? "Sign up" : "Sign in"}
           </button>
         </p>

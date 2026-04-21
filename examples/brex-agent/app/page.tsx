@@ -55,7 +55,9 @@ export default function AuthPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <BrexLogo className="h-[22px] w-auto" />
-            <span className="text-[11px] font-medium text-foreground/40 border border-border rounded px-1.5 py-0.5">Agent</span>
+            <span className="text-[11px] font-medium text-foreground/40 border border-border rounded px-1.5 py-0.5">
+              Agent
+            </span>
           </div>
           <p className="text-[13px] text-foreground/45 mt-3">
             AI agents pay with your Brex card. You approve every transaction.
@@ -91,9 +93,7 @@ export default function AuthPage() {
             className="w-full px-3 py-2.5 rounded-lg bg-background border border-border placeholder:text-foreground/25 focus:border-foreground/20 focus:ring-1 focus:ring-foreground/[0.08] text-[13px] outline-none transition-all"
           />
 
-          {error && (
-            <p className="text-[12px] text-red-500 px-1">{error}</p>
-          )}
+          {error && <p className="text-[12px] text-red-500 px-1">{error}</p>}
 
           <button
             type="submit"

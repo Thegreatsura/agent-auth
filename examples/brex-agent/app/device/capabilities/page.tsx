@@ -9,7 +9,9 @@ function AgentAuthLogo({ className }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 justify-center ${className ?? ""}`}>
       <BrexLogo className="h-[18px] w-auto" />
-      <span className="text-[10px] font-medium text-foreground/40 border border-border rounded px-1.5 py-0.5">Agent</span>
+      <span className="text-[10px] font-medium text-foreground/40 border border-border rounded px-1.5 py-0.5">
+        Agent
+      </span>
     </div>
   );
 }

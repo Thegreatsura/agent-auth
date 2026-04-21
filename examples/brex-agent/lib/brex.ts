@@ -25,11 +25,7 @@ export interface BrexCashAccount {
   available_balance: { amount: number; currency: string };
 }
 
-async function brexFetch<T>(
-  token: string,
-  path: string,
-  options?: RequestInit,
-): Promise<T> {
+async function brexFetch<T>(token: string, path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BREX_API_BASE}${path}`, {
     ...options,
     headers: {

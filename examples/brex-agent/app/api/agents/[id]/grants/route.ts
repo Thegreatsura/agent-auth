@@ -22,7 +22,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       id: g.id,
       capability: g.capability,
       status: g.status,
-      constraints: g.constraints ? (typeof g.constraints === "string" ? JSON.parse(g.constraints) : g.constraints) : null,
+      constraints: g.constraints
+        ? typeof g.constraints === "string"
+          ? JSON.parse(g.constraints)
+          : g.constraints
+        : null,
     })),
   });
 }
