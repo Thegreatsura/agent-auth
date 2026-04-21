@@ -19,6 +19,7 @@ import type {
 } from "../types";
 import {
   buildApprovalInfo,
+  findHostByIdOrKid,
   findHostByKey,
   formatGrantsResponse,
   isDynamicHostAllowed,
@@ -112,10 +113,7 @@ export function claimAgent(
       let hostRecord: AgentHost | null = null;
 
       if (hostIdFromJwt) {
-        hostRecord = await ctx.context.adapter.findOne<AgentHost>({
-          model: TABLE.host,
-          where: [{ field: "id", value: hostIdFromJwt }],
-        });
+        hostRecord = await findHostByIdOrKid(ctx.context.adapter, hostIdFromJwt);
       }
 
       if (hostRecord) {
@@ -146,7 +144,9 @@ export function claimAgent(
           publicKey: hostPubKey,
           maxAge: opts.jwtMaxAge,
         });
-        if (!payload || payload.iss !== hostRecord.id) {
+        // §4.2: iss identifies the host by either its registered id or
+        // its JWK thumbprint (stored in the `kid` column for pre-enrolled hosts).
+        if (!payload || (payload.iss !== hostRecord.id && payload.iss !== hostRecord.kid)) {
           throw agentError("UNAUTHORIZED", ERR.INVALID_JWT);
         }
 

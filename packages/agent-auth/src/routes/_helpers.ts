@@ -82,6 +82,28 @@ export function resolveDeviceAuthPage(opts: ResolvedAgentAuthOptions, origin: st
   return `${origin}${path}`;
 }
 
+/**
+ * Resolve a host by the `iss` claim of a host JWT. Per spec §4.2 `iss` is
+ * the JWK thumbprint, which lives in the `id` column for hosts created
+ * with a public key up front, and in the `kid` column for hosts created
+ * via the enrollment-token flow. Mirrors the middleware's host lookup.
+ */
+export async function findHostByIdOrKid(
+  adapter: AdapterFindOne,
+  iss: string,
+): Promise<AgentHost | null> {
+  return (
+    (await adapter.findOne<AgentHost>({
+      model: TABLE.host,
+      where: [{ field: "id", value: iss }],
+    })) ??
+    (await adapter.findOne<AgentHost>({
+      model: TABLE.host,
+      where: [{ field: "kid", value: iss }],
+    }))
+  );
+}
+
 export async function findHostByKey(
   adapter: AdapterFindOne,
   publicKey: Record<string, unknown>,
