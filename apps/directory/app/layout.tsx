@@ -14,10 +14,32 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://agent-auth.directory";
+
 export const metadata: Metadata = {
-  title: "AGENT-AUTH — Directory",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "AGENT-AUTH — Directory",
+    template: "%s — AGENT-AUTH Directory",
+  },
   description:
     "A searchable directory of Agent Auth-capable services. Discover providers by intent.",
+  applicationName: "Agent-Auth Directory",
+  keywords: ["agent auth", "agent authentication", "AI agents", "OAuth", "MCP", "directory"],
+  openGraph: {
+    type: "website",
+    siteName: "Agent-Auth Directory",
+    url: SITE_URL,
+    title: "AGENT-AUTH — Directory",
+    description:
+      "A searchable directory of Agent Auth-capable services. Discover providers by intent.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AGENT-AUTH — Directory",
+    description:
+      "A searchable directory of Agent Auth-capable services. Discover providers by intent.",
+  },
 };
 
 export const viewport: Viewport = {

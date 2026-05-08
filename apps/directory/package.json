@@ -7,11 +7,13 @@
     "dev": "portless directory next dev --turbo",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@auth/agent": "workspace:*",
-    "@better-auth/oauth-provider": "latest",
+    "@better-auth/oauth-provider": "1.6.2",
     "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "better-auth": "^1.5.5",
@@ -40,6 +42,7 @@
     "@types/react-dom": "^19.1.0",
     "drizzle-kit": "^0.31.1",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vitest": "^4.0.18"
   }
 }

@@ -12,26 +12,36 @@ export type ProviderSearchResult = ProviderConfig & {
   verified: boolean;
 };
 
-export async function searchProvidersByIntent(
-  intent: string,
-  limit = 10,
-): Promise<ProviderSearchResult[]> {
-  const clamped = Math.min(50, Math.max(1, limit));
+export interface SearchOptions {
+  /** Max results to return after pagination. 1..50, defaults to 10. */
+  limit?: number;
+  /** Number of leading results to skip for pagination. Defaults to 0. */
+  offset?: number;
+}
 
-  const rows = await db
-    .select()
-    .from(provider)
-    .where(and(eq(provider.status, "active"), eq(provider.public, true)));
+export interface SearchResponse {
+  results: ProviderSearchResult[];
+  /** Total number of providers that scored above the relevance threshold. */
+  total: number;
+}
 
-  const searchable = rows.map((row) => ({
-    ...row,
-    displayName: row.displayName,
-    categories: safeJsonParse<string[]>(row.categories, []),
-  }));
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 50;
 
-  const ranked = await rankByIntent(searchable, intent);
+function clampLimit(limit: number | undefined): number {
+  if (!Number.isFinite(limit ?? NaN)) return DEFAULT_LIMIT;
+  return Math.min(MAX_LIMIT, Math.max(1, Math.trunc(limit as number)));
+}
 
-  return ranked.slice(0, clamped).map((row) => ({
+function clampOffset(offset: number | undefined): number {
+  if (!Number.isFinite(offset ?? NaN)) return 0;
+  return Math.max(0, Math.trunc(offset as number));
+}
+
+type Searchable = Omit<typeof provider.$inferSelect, "categories"> & { categories: string[] };
+
+function toResult(row: Searchable): ProviderSearchResult {
+  return {
     version: row.version,
     provider_name: row.name,
     description: row.description,
@@ -45,5 +55,29 @@ export async function searchProvidersByIntent(
     url: row.url,
     categories: row.categories,
     verified: row.verified,
+  };
+}
+
+export async function searchProvidersByIntent(
+  intent: string,
+  options: SearchOptions = {},
+): Promise<SearchResponse> {
+  const limit = clampLimit(options.limit);
+  const offset = clampOffset(options.offset);
+
+  const rows = await db
+    .select()
+    .from(provider)
+    .where(and(eq(provider.status, "active"), eq(provider.public, true)));
+
+  const searchable: Searchable[] = rows.map((row) => ({
+    ...row,
+    categories: safeJsonParse<string[]>(row.categories, []),
   }));
+
+  const ranked = await rankByIntent(searchable, intent);
+  const total = ranked.length;
+  const page = ranked.slice(offset, offset + limit);
+
+  return { results: page.map(toResult), total };
 }
