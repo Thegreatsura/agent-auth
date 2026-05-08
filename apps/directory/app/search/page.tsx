@@ -2,32 +2,7 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ProviderCard } from "@/components/provider-card";
 import { SearchBar } from "@/components/search-bar";
-
-interface SearchResult {
-  protocol_version: string;
-  provider_name: string;
-  description?: string;
-  issuer: string;
-  algorithms: string[];
-  modes: string[];
-  approval_methods: string[];
-  endpoints: Record<string, string>;
-  display_name?: string;
-  url?: string;
-  categories?: string[];
-  verified?: boolean;
-}
-
-async function searchProviders(intent: string) {
-  const base =
-    process.env.NEXT_PUBLIC_DIRECTORY_URL ?? `http://localhost:${process.env.PORT ?? "4200"}`;
-  const res = await fetch(`${base}/api/search?intent=${encodeURIComponent(intent)}&limit=20`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { providers: SearchResult[] };
-  return data.providers;
-}
+import { searchProvidersByIntent } from "@/lib/search";
 
 export default async function SearchPage({
   searchParams,
@@ -36,7 +11,7 @@ export default async function SearchPage({
 }) {
   const { q } = await searchParams;
   const intent = q?.trim() ?? "";
-  const results = intent ? await searchProviders(intent) : [];
+  const results = intent ? await searchProvidersByIntent(intent, 20) : [];
 
   return (
     <div className="min-h-dvh flex flex-col">
