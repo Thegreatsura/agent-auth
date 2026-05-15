@@ -7,14 +7,17 @@ import { resolveDeviceAuthPage } from "../_helpers";
 import type { Agent, ApprovalRequest, HostSession, ResolvedAgentAuthOptions } from "../../types";
 
 /**
- * POST /device/code (RFC 8628 §3.1–3.2).
+ * POST /agent/device/code (RFC 8628 §3.1–3.2).
  *
  * Issues a device code and user code for a pending agent.
  * Auth: Host JWT — the host must own the agent.
+ *
+ * Namespaced under `/agent/*` to avoid conflicting with Better Auth's
+ * core `device-authorization` plugin which owns `/device/code`.
  */
 export function deviceCode(opts: ResolvedAgentAuthOptions) {
   return createAuthEndpoint(
-    "/device/code",
+    "/agent/device/code",
     {
       method: "POST",
       body: z.object({

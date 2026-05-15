@@ -37,7 +37,7 @@ export const agentAuthClient = () => {
       "/host/enroll": "POST",
       "/host/switch-account": "POST",
       "/agent/ciba/authorize": "POST",
-      "/device/code": "POST",
+      "/agent/device/code": "POST",
     },
     $ERROR_CODES: AGENT_AUTH_ERROR_CODES,
   } satisfies BetterAuthClientPlugin;

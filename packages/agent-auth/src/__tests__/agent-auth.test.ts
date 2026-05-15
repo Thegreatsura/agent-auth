@@ -86,7 +86,7 @@ beforeAll(async () => {
 
 describe("RFC 6749 §5.2 Error Envelope", () => {
   it("error responses use RFC 6749 §5.2 envelope", async () => {
-    const res = await client.api("/device/code", {
+    const res = await client.api("/agent/device/code", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ agent_id: "nonexistent" }),
