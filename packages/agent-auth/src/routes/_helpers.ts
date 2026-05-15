@@ -82,6 +82,29 @@ export function resolveDeviceAuthPage(opts: ResolvedAgentAuthOptions, origin: st
   return `${origin}${path}`;
 }
 
+/**
+ * Resolve a host by the `iss` claim of a host JWT, matching the middleware.
+ *
+ * SDK-signed JWTs use `iss = JWK thumbprint` (spec §4.2), stored in `kid`.
+ * The `id` lookup is a liberal fallback for hand-crafted callers that sign
+ * with the host's UUID instead — tightening it to kid-only is a follow-up.
+ */
+export async function findHostByIdOrKid(
+  adapter: AdapterFindOne,
+  iss: string,
+): Promise<AgentHost | null> {
+  return (
+    (await adapter.findOne<AgentHost>({
+      model: TABLE.host,
+      where: [{ field: "id", value: iss }],
+    })) ??
+    (await adapter.findOne<AgentHost>({
+      model: TABLE.host,
+      where: [{ field: "kid", value: iss }],
+    }))
+  );
+}
+
 export async function findHostByKey(
   adapter: AdapterFindOne,
   publicKey: Record<string, unknown>,
