@@ -2,41 +2,33 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ProviderCard } from "@/components/provider-card";
 import { SearchBar } from "@/components/search-bar";
+import { searchProvidersByIntent } from "@/lib/search";
 
-interface SearchResult {
-  protocol_version: string;
-  provider_name: string;
-  description?: string;
-  issuer: string;
-  algorithms: string[];
-  modes: string[];
-  approval_methods: string[];
-  endpoints: Record<string, string>;
-  display_name?: string;
-  url?: string;
-  categories?: string[];
-  verified?: boolean;
-}
+export const dynamic = "force-dynamic";
 
-async function searchProviders(intent: string) {
-  const base =
-    process.env.NEXT_PUBLIC_DIRECTORY_URL ?? `http://localhost:${process.env.PORT ?? "4200"}`;
-  const res = await fetch(`${base}/api/search?intent=${encodeURIComponent(intent)}&limit=20`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { providers: SearchResult[] };
-  return data.providers;
+const PAGE_SIZE = 12;
+
+function buildPageHref(q: string, page: number): string {
+  const params = new URLSearchParams({ q });
+  if (page > 1) params.set("page", String(page));
+  return `/search?${params.toString()}`;
 }
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
   const intent = q?.trim() ?? "";
-  const results = intent ? await searchProviders(intent) : [];
+  const page = Math.max(1, Number(pageParam ?? "1") || 1);
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { results, total } = intent
+    ? await searchProvidersByIntent(intent, { limit: PAGE_SIZE, offset })
+    : { results: [], total: 0 };
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -52,37 +44,81 @@ export default async function SearchPage({
         {intent && (
           <div className="mb-6">
             <p className="text-[11px] font-mono text-foreground/40">
-              {results.length} result{results.length !== 1 && "s"} for intent &ldquo;{intent}&rdquo;
+              {total} result{total !== 1 && "s"} for intent &ldquo;{intent}&rdquo;
+              {totalPages > 1 && (
+                <span className="text-foreground/25">
+                  {" — "}page {page} of {totalPages}
+                </span>
+              )}
             </p>
           </div>
         )}
 
         {results.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {results.map((p) => (
-              <ProviderCard
-                key={p.provider_name}
-                name={p.provider_name}
-                displayName={p.display_name ?? p.provider_name}
-                description={p.description ?? ""}
-                categories={p.categories ?? []}
-                verified={p.verified ?? false}
-                modes={p.modes}
-                url={p.url ?? p.issuer}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {results.map((p) => (
+                <ProviderCard
+                  key={p.provider_name}
+                  name={p.provider_name}
+                  displayName={p.display_name ?? p.provider_name}
+                  description={p.description ?? ""}
+                  categories={p.categories ?? []}
+                  verified={p.verified ?? false}
+                  modes={p.modes}
+                  url={p.url ?? p.issuer}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                {page > 1 && (
+                  <Link
+                    href={buildPageHref(intent, page - 1)}
+                    className="text-[11px] font-mono text-foreground/45 hover:text-foreground/70 border border-foreground/[0.08] px-3 py-1.5 transition-colors"
+                  >
+                    ← Prev
+                  </Link>
+                )}
+                <span className="text-[11px] font-mono text-foreground/30 px-2">
+                  {page} / {totalPages}
+                </span>
+                {page < totalPages && (
+                  <Link
+                    href={buildPageHref(intent, page + 1)}
+                    className="text-[11px] font-mono text-foreground/45 hover:text-foreground/70 border border-foreground/[0.08] px-3 py-1.5 transition-colors"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
         ) : intent ? (
           <div className="text-center py-16 space-y-3">
-            <p className="text-sm text-foreground/40">No providers match this intent.</p>
+            <p className="text-sm text-foreground/40">
+              {page > 1 ? "No more results on this page." : "No providers match this intent."}
+            </p>
             <p className="text-[11px] font-mono text-foreground/25">
-              Try a different search, or{" "}
-              <Link
-                href="/submit"
-                className="text-foreground/40 hover:text-foreground/60 underline underline-offset-2 transition-colors"
-              >
-                submit a provider
-              </Link>
+              {page > 1 ? (
+                <Link
+                  href={buildPageHref(intent, 1)}
+                  className="text-foreground/40 hover:text-foreground/60 underline underline-offset-2 transition-colors"
+                >
+                  Back to first page
+                </Link>
+              ) : (
+                <>
+                  Try a different search, or{" "}
+                  <Link
+                    href="/submit"
+                    className="text-foreground/40 hover:text-foreground/60 underline underline-offset-2 transition-colors"
+                  >
+                    submit a provider
+                  </Link>
+                </>
+              )}
             </p>
           </div>
         ) : (

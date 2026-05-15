@@ -36,7 +36,10 @@ function loadPipeline(): Promise<Pipeline | null> {
   return pipelineState.loading;
 }
 
-void loadPipeline();
+// Lazy: the model loads on the first call to rankByIntent().
+// Eager preloading at module import was triggered for every server function
+// that imports this module (auth, /api/[transport], etc.) and added 25MB+
+// of cold-start cost to routes that never call search.
 
 const embeddingCache = new Map<string, number[]>();
 const CACHE_TTL_MS = 30 * 60 * 1000;

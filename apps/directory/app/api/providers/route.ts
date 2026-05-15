@@ -1,10 +1,26 @@
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { provider } from "@/lib/db/schema";
 import type { ProviderConfig } from "@/lib/discover";
 import { discoverProvider } from "@/lib/discover";
 import { safeJsonParse } from "@/lib/utils";
+
+// A provider_name is a stable identifier used in URLs (/providers/<name>) and
+// API responses. Restrict to a slug-like form so it round-trips cleanly.
+const PROVIDER_NAME = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
+const MAX_NAME_LENGTH = 80;
+
+const SubmitBody = z.object({
+  url: z
+    .string({ required_error: "url is required" })
+    .url("url must be an absolute URL")
+    .max(2048),
+  displayName: z.string().trim().min(1).max(120).optional(),
+  categories: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+  logoUrl: z.string().url().max(2048).optional(),
+});
 
 function toProviderConfig(row: typeof provider.$inferSelect): ProviderConfig {
   return {
@@ -63,17 +79,28 @@ export async function POST(request: Request) {
       return Response.json({ error: "Sign in to submit a provider" }, { status: 401 });
     }
 
-    const body = (await request.json()) as {
-      url?: string;
-      categories?: string[];
-      logoUrl?: string;
-      displayName?: string;
-    };
-
-    if (!body.url) {
-      return Response.json({ error: "url is required" }, { status: 400 });
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      return Response.json({ error: "Request body must be JSON" }, { status: 400 });
     }
 
+    const parsed = SubmitBody.safeParse(raw);
+    if (!parsed.success) {
+      return Response.json(
+        {
+          error: "Invalid request body",
+          issues: parsed.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 },
+      );
+    }
+
+    const body = parsed.data;
     const normalized = body.url.replace(/\/+$/, "");
 
     const existing = await db.select().from(provider).where(eq(provider.url, normalized)).limit(1);
@@ -99,13 +126,40 @@ export async function POST(request: Request) {
       );
     }
 
+    const name = config.provider_name?.trim();
+
+    if (!name || name.length > MAX_NAME_LENGTH || !PROVIDER_NAME.test(name)) {
+      return Response.json(
+        {
+          error:
+            "Provider's /.well-known/agent-configuration declares an invalid provider_name. " +
+            "It must be a slug: lowercase letters, digits, dots, dashes, or underscores; " +
+            "no leading/trailing punctuation; max 80 characters.",
+          provider_name: name ?? null,
+        },
+        { status: 422 },
+      );
+    }
+
+    const nameClash = await db.select().from(provider).where(eq(provider.name, name)).limit(1);
+
+    if (nameClash.length > 0) {
+      return Response.json(
+        {
+          error: "A provider with this provider_name is already registered",
+          provider: nameClash[0]?.name,
+        },
+        { status: 409 },
+      );
+    }
+
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
     const row = {
       id,
-      name: config.provider_name,
-      displayName: body.displayName ?? config.provider_name,
+      name,
+      displayName: body.displayName ?? name,
       description: config.description ?? "",
       issuer: config.issuer,
       url: normalized,
@@ -131,7 +185,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         id,
-        name: config.provider_name,
+        name,
         config: toProviderConfig({ ...row, jwksUri: row.jwksUri }),
       },
       { status: 201 },

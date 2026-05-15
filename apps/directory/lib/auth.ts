@@ -54,6 +54,11 @@ export const auth = betterAuth({
       rateLimit: {
         register: { window: 60, max: 50 },
       },
+      // The /.well-known/oauth-authorization-server/[...path] route already
+      // handles the /api/auth subpath the plugin checks for at boot.
+      silenceWarnings: {
+        oauthAuthServerConfig: true,
+      },
     }),
   ],
   trustedOrigins: ["chrome-extension://", "https://claude.ai", "https://api.anthropic.com"],
