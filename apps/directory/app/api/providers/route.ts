@@ -13,10 +13,7 @@ const PROVIDER_NAME = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
 const MAX_NAME_LENGTH = 80;
 
 const SubmitBody = z.object({
-  url: z
-    .string({ required_error: "url is required" })
-    .url("url must be an absolute URL")
-    .max(2048),
+  url: z.string({ required_error: "url is required" }).url("url must be an absolute URL").max(2048),
   displayName: z.string().trim().min(1).max(120).optional(),
   categories: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   logoUrl: z.string().url().max(2048).optional(),
