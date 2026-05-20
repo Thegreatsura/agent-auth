@@ -386,6 +386,8 @@ export async function runJwtMiddleware(
 
     const agentSession: AgentSession = {
       type: agent.mode,
+      agentId: agent.id,
+      userId: agent.userId ?? host?.userId ?? null,
       agent: {
         id: agent.id,
         name: agent.name,

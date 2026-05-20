@@ -5,8 +5,17 @@ const WELL_KNOWN_PATH = "/.well-known/agent-configuration";
 
 /**
  * Fetch the discovery document from a service URL — §6.1.
- * Tries both `{url}/.well-known/agent-configuration` and
- * `{url}/api/auth/agent/agent-configuration` (Better Auth default mount).
+ *
+ * Tries, in order:
+ *   1. `{url}/.well-known/agent-configuration` — canonical origin path (AAP §7).
+ *   2. `{url}/api/auth/agent-configuration` — Better Auth default mount
+ *      (`agentAuth()` server plugin registers the endpoint at
+ *      `/agent-configuration` under the configured `basePath`, which
+ *      defaults to `/api/auth`).
+ *   3. `{url}/api/auth/agent/agent-configuration` — **deprecated.** Retained
+ *      for back-compat with pre-0.5.2 deployments that mounted the
+ *      endpoint under `/agent/`. Slated for removal in 1.0; servers
+ *      should advertise their config under either of the first two paths.
  */
 export async function discoverProvider(
   url: string,
@@ -14,7 +23,11 @@ export async function discoverProvider(
 ): Promise<ProviderConfig> {
   const base = url.replace(/\/+$/, "");
 
-  const urls = [`${base}${WELL_KNOWN_PATH}`, `${base}/api/auth/agent/agent-configuration`];
+  const urls = [
+    `${base}${WELL_KNOWN_PATH}`,
+    `${base}/api/auth/agent-configuration`,
+    `${base}/api/auth/agent/agent-configuration`,
+  ];
 
   let lastError: Error | null = null;
 

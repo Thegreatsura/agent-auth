@@ -147,6 +147,7 @@ export const agentAuth = (options?: AgentAuthOptions) => {
       getAgent: routes.getAgent,
       updateAgent: routes.updateAgent,
       revokeAgent: routes.revokeAgent,
+      revokeCapability: routes.revokeCapability,
       rotateKey: routes.rotateKey,
       reactivateAgent: routes.reactivateAgent,
       getAgentSession: routes.getAgentSession,

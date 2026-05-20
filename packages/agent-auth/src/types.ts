@@ -253,6 +253,30 @@ export interface AgentSessionUser {
  */
 export interface AgentSession {
   type: AgentMode;
+  /**
+   * Convenience alias for `agent.id`. Always present.
+   *
+   * Provided so audit-log handlers and `onExecute` callbacks can read the
+   * agent identifier without descending two levels. The canonical field
+   * remains `agent.id`.
+   */
+  agentId: string;
+  /**
+   * The real account this agent acts for. Resolved as
+   * `agent.userId ?? host?.userId ?? null` — the same precedence the
+   * plugin uses internally for `resolveSessionUser`.
+   *
+   * `agent.userId` is the canonical owner once the agent has been
+   * approved/claimed. Before that — and for autonomous agents on a host
+   * that has not yet been claimed — it can be `null`, in which case we
+   * fall back to the host owner. If both are `null`, the runtime user is
+   * surfaced via `user.id` (which may be a synthetic identity produced by
+   * `resolveAutonomousUser`).
+   *
+   * Use `userId` for "which real account does this agent act for"; use
+   * `user.id` for "who should this execution attribute to in app logic".
+   */
+  userId: string | null;
   agent: {
     id: string;
     name: string;
@@ -301,12 +325,13 @@ export type AgentAuthPath =
   | "/agent/cleanup"
   | "/agent/request-capability"
   | "/agent/approve-capability"
-  | "/agent/agent-configuration"
   | "/capability/list"
   | "/capability/execute"
   | "/agent/status"
   | "/agent/introspect"
   | "/agent/grant-capability"
+  | "/agent/revoke-capability"
+  | "/agent-configuration"
   | "/host/create"
   | "/host/enroll"
   | "/host/list"
@@ -768,6 +793,7 @@ export type AgentAuthAuditEventType =
   | "capability.approved"
   | "capability.denied"
   | "capability.granted"
+  | "capability.revoked"
   | "approval.created"
   | "approval.approved"
   | "approval.denied";

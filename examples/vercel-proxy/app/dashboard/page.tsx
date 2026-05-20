@@ -64,7 +64,7 @@ export default function DashboardOverview() {
   const endpoints = [
     {
       label: "Agent Config",
-      path: "/api/auth/agent/agent-configuration",
+      path: "/api/auth/agent-configuration",
     },
     { label: "Capabilities", path: "/api/auth/capability/list" },
     { label: "Register Agent", path: "/api/auth/agent/register" },
@@ -150,7 +150,7 @@ export default function DashboardOverview() {
           <div className="rounded-lg border border-border bg-surface p-4">
             <pre className="overflow-x-auto font-mono text-xs leading-6 text-foreground/80">
               <code>{`# Discover this provider
-curl ${baseUrl}/api/auth/agent/agent-configuration
+curl ${baseUrl}/api/auth/agent-configuration
 
 # List available capabilities
 curl ${baseUrl}/api/auth/capability/list`}</code>

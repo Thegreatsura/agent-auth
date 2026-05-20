@@ -210,12 +210,27 @@ export function requestCapability(opts: ResolvedAgentAuthOptions) {
         }
       }
 
+      // A capability that was previously revoked or denied represents an
+      // explicit user decision ("don't auto-grant this again"). Treat such
+      // capabilities as needing fresh approval even if they're still in
+      // the host's default budget — mirrors `tryAutoGrantFromHostBudget`
+      // in execute-capability so both paths converge on the same answer.
+      const hasRevokedOrDenied = (capId: string) =>
+        existingGrants.some(
+          (g) =>
+            g.capability === capId && (g.status === "revoked" || g.status === "denied"),
+        );
+
       let autoApprove: string[];
       let needsApproval: string[];
 
       if (hostIsActive && hostBudget.length > 0) {
-        autoApprove = newOnly.filter((c) => hasCapability(hostBudget, c));
-        needsApproval = newOnly.filter((c) => !hasCapability(hostBudget, c));
+        autoApprove = newOnly.filter(
+          (c) => hasCapability(hostBudget, c) && !hasRevokedOrDenied(c),
+        );
+        needsApproval = newOnly.filter(
+          (c) => !hasCapability(hostBudget, c) || hasRevokedOrDenied(c),
+        );
       } else {
         autoApprove = [];
         needsApproval = newOnly;

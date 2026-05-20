@@ -9,7 +9,7 @@ export const agentAuthClient = () => {
     id: "agent-auth",
     $InferServerPlugin: {} as ReturnType<typeof agentAuth>,
     pathMethods: {
-      "/agent/agent-configuration": "GET",
+      "/agent-configuration": "GET",
       "/capability/list": "GET",
       "/capability/describe": "GET",
       "/capability/execute": "POST",
@@ -30,6 +30,7 @@ export const agentAuthClient = () => {
       "/agent/approve-capability": "POST",
       "/agent/introspect": "POST",
       "/agent/grant-capability": "POST",
+      "/agent/revoke-capability": "POST",
       "/host/create": "POST",
       "/host/revoke": "POST",
       "/host/update": "POST",

@@ -50,6 +50,10 @@ export const AGENT_AUTH_ERROR_CODES = {
     code: "agent_revoked",
     message: "Agent has been revoked",
   },
+  GRANT_REVOKED: {
+    code: "grant_revoked",
+    message: "Capability grant has been revoked",
+  },
   AGENT_EXPIRED: {
     code: "agent_expired",
     message: "Agent session has expired",
@@ -164,7 +168,15 @@ export const AGENT_AUTH_ERROR_CODES = {
   },
   DYNAMIC_HOST_REGISTRATION_DISABLED: {
     code: "dynamic_host_registration_disabled",
-    message: "Dynamic host registration is not enabled on this server",
+    // Self-explanatory error per the spec-compliance guidance: the failure
+    // mode should tell the integrator exactly how to fix it without forcing
+    // a docs lookup. The option name and the pre-enrollment alternative are
+    // the two paths forward.
+    message:
+      "Dynamic host registration is disabled. Enable it by passing " +
+      "`allowDynamicHostRegistration: true` to `agentAuth({...})`, or " +
+      "pre-enroll your host via `POST /host/create` + `POST /host/enroll`. " +
+      "See https://agent-auth-protocol.com/docs/host#enrollment",
   },
   ENROLLMENT_TOKEN_INVALID: {
     code: "enrollment_token_invalid",

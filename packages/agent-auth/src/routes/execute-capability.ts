@@ -146,6 +146,27 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
       }
 
       if (!activeGrant) {
+        // Distinguish "grant was explicitly revoked" from "never granted".
+        // A revoked grant means the user (or host/agent) intentionally
+        // removed authorisation via POST /agent/revoke-capability —
+        // surfacing this separately lets clients message it correctly
+        // (and matches the capability lifecycle modelled by
+        // AgentCapabilityGrant.status).
+        const revokedGrant = await ctx.context.adapter.findOne<AgentCapabilityGrant>({
+          model: TABLE.grant,
+          where: [
+            { field: "agentId", value: agentSession.agent.id },
+            { field: "capability", value: capabilityName },
+            { field: "status", value: "revoked" },
+          ],
+        });
+        if (revokedGrant) {
+          throw agentError(
+            "FORBIDDEN",
+            ERR.GRANT_REVOKED,
+            `Grant for capability "${capabilityName}" has been revoked.`,
+          );
+        }
         throw agentError(
           "FORBIDDEN",
           ERR.CAPABILITY_NOT_GRANTED,

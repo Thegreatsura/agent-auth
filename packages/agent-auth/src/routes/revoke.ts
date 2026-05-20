@@ -7,6 +7,7 @@ import { agentError, AGENT_AUTH_ERROR_CODES as ERR } from "../errors";
 import type {
   Agent,
   AgentCapabilityGrant,
+  AgentHost,
   AgentSession,
   HostSession,
   ResolvedAgentAuthOptions,
@@ -73,7 +74,20 @@ export function revokeAgent(opts: ResolvedAgentAuthOptions) {
         }
       } else if (userSession) {
         if (agent.userId !== userSession.user.id) {
-          throw agentError("FORBIDDEN", ERR.UNAUTHORIZED);
+          // Fall back to host ownership: a host owner can revoke agents on
+          // their host even when the agent has no userId yet (autonomous /
+          // pending claim). Symmetric with /agent/grant-capability and
+          // /agent/revoke-capability.
+          if (!agent.hostId) {
+            throw agentError("FORBIDDEN", ERR.UNAUTHORIZED);
+          }
+          const host = await ctx.context.adapter.findOne<AgentHost>({
+            model: TABLE.host,
+            where: [{ field: "id", value: agent.hostId }],
+          });
+          if (!host || host.userId !== userSession.user.id) {
+            throw agentError("FORBIDDEN", ERR.UNAUTHORIZED);
+          }
         }
       }
 
