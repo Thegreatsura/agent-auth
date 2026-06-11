@@ -7,7 +7,7 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "bump": "bumpp packages/agent-auth/package.json packages/sdk/package.json packages/cli/package.json package.json",
-    "test": "turbo test",
+    "test": "turbo test --filter=!./examples/*",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check ."
   },

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createAgentAuthBeforeHook } from "../middleware";
+import { shouldRunMiddleware } from "../server/middleware";
 import type { JtiCacheStore } from "../utils/jti-cache";
 import type { ResolvedAgentAuthOptions } from "../types";
 
@@ -72,5 +73,58 @@ describe("agent-auth before-hook matcher scoping", () => {
 
   it("returns false when path is missing", () => {
     expect(matcher({ path: undefined, headers: new Headers() })).toBe(false);
+  });
+});
+
+/**
+ * The standalone server variant must apply the exact same scoping as the
+ * plugin before-hook so the two matchers never drift apart.
+ */
+describe("server shouldRunMiddleware matcher scoping", () => {
+  const THREE_PART_JWT = "header.payload.signature";
+
+  function headersFor(jwt: string | null = THREE_PART_JWT) {
+    const headers = new Headers();
+    if (jwt) headers.set("authorization", `Bearer ${jwt}`);
+    return headers;
+  }
+
+  it("intercepts agent-auth's own authenticated endpoints", () => {
+    for (const path of [
+      "/agent/session",
+      "/agent/status",
+      "/agent/request-capability",
+      "/capability/execute",
+      "/capability/batch-execute",
+      "/host/get",
+      "/host/rotate-key",
+    ]) {
+      expect(shouldRunMiddleware(path, headersFor()), `expected to match ${path}`).toBe(true);
+    }
+  });
+
+  it("ignores paths owned by other plugins or core routes", () => {
+    for (const path of [
+      "/dash/projects",
+      "/sentinel/events",
+      "/get-session",
+      "/sign-in/email",
+      "/organization/list",
+      "/agent-configuration",
+      "/api/custom",
+    ]) {
+      expect(shouldRunMiddleware(path, headersFor()), `expected NOT to match ${path}`).toBe(false);
+    }
+  });
+
+  it("never intercepts identity bootstrap endpoints", () => {
+    expect(shouldRunMiddleware("/agent/register", headersFor())).toBe(false);
+    expect(shouldRunMiddleware("/agent/claim", headersFor())).toBe(false);
+  });
+
+  it("requires a 3-part Bearer JWT on agent-auth paths", () => {
+    expect(shouldRunMiddleware("/agent/session", headersFor(null))).toBe(false);
+    expect(shouldRunMiddleware("/agent/session", headersFor("opaque-token"))).toBe(false);
+    expect(shouldRunMiddleware("/agent/session", headersFor("two.parts"))).toBe(false);
   });
 });

@@ -68,8 +68,17 @@ async function resolveSessionUser(args: {
 
 const OPTIONAL_AUTH_PATHS = new Set(["/capability/list", "/capability/describe"]);
 
+// Paths owned by this plugin. Must mirror the scoping in src/middleware.ts:
+// the JWT middleware must only intercept agent-auth's own endpoints, otherwise
+// it hijacks Bearer JWTs bound for other plugins or core routes.
+const AGENT_AUTH_PREFIXES = ["/agent/", "/capability/", "/host/"];
+// Bootstrap endpoints that establish identity and therefore must not require
+// an existing agent/host session.
+const UNAUTHENTICATED_PATHS = new Set(["/agent/register", "/agent/claim"]);
+
 export function shouldRunMiddleware(path: string, headers: Headers): boolean {
-  if (path === "/agent/register" || path === "/agent/claim") return false;
+  if (!AGENT_AUTH_PREFIXES.some((prefix) => path.startsWith(prefix))) return false;
+  if (UNAUTHENTICATED_PATHS.has(path)) return false;
   const auth = headers.get("authorization");
   if (!auth) return false;
   const bearer = auth.replace(/^Bearer\s+/i, "");
