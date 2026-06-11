@@ -68,9 +68,22 @@ export function createAgentAuthBeforeHook(
 ): { matcher: (context: HookEndpointContext) => boolean; handler: AuthMiddleware } {
   const OPTIONAL_AUTH_PATHS = new Set(["/capability/list", "/capability/describe"]);
 
+  // Paths owned by this plugin. The before-hook is registered globally on the
+  // auth instance, so it MUST scope itself to agent-auth's own endpoints —
+  // otherwise it hijacks any request carrying a Bearer JWT, including tokens
+  // bound for other plugins or core Better Auth routes, and rejects them with
+  // an AgentAuth challenge before their real owner ever runs.
+  const AGENT_AUTH_PREFIXES = ["/agent/", "/capability/", "/host/"];
+  // Bootstrap endpoints that establish identity and therefore must not require
+  // an existing agent/host session.
+  const UNAUTHENTICATED_PATHS = new Set(["/agent/register", "/agent/claim"]);
+
   return {
     matcher: (ctx: { path?: string; headers?: Headers }) => {
-      if (!ctx.path || ctx.path === "/agent/register" || ctx.path === "/agent/claim") return false;
+      const path = ctx.path;
+      if (!path) return false;
+      if (!AGENT_AUTH_PREFIXES.some((prefix) => path.startsWith(prefix))) return false;
+      if (UNAUTHENTICATED_PATHS.has(path)) return false;
       const auth = ctx.headers?.get("authorization");
       if (!auth) return false;
       const bearer = auth.replace(/^Bearer\s+/i, "");
