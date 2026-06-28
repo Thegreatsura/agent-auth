@@ -442,7 +442,7 @@ export default function AgentsPage() {
                       })}
                     </div>
 
-                    <div className="px-4 py-4 max-h-[400px] overflow-y-auto">
+                    <div className="px-4 py-4">
                       {(activeTab[agent.agent_id] ?? "details") === "details" ? (
                         <div className="flex flex-col gap-4">
                           <div className="grid grid-cols-2 gap-2">

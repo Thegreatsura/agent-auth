@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { provider } from "@/lib/db/schema";
 import type { ProviderConfig } from "@/lib/discover";
-import { discoverProvider } from "@/lib/discover";
+import { discoverProvider, fetchProviderCapabilities } from "@/lib/discover";
 import { deriveProviderFromOpenAPI } from "@/lib/openapi";
 import { safeJsonParse } from "@/lib/utils";
 
@@ -230,6 +230,13 @@ export async function POST(request: Request) {
         );
       }
 
+      // The discovery document only advertises a capabilities endpoint, not the
+      // list, so fetch it to populate the column (mirrors the OpenAPI branch).
+      const capabilities = await fetchProviderCapabilities(
+        config.issuer,
+        config.endpoints?.capabilities,
+      );
+
       row = {
         id,
         name,
@@ -245,7 +252,7 @@ export async function POST(request: Request) {
         jwksUri: config.jwks_uri ?? null,
         categories: JSON.stringify(body.categories ?? []),
         logoUrl: body.logoUrl ?? null,
-        capabilities: null,
+        capabilities,
         sourceType: "agent-auth",
         openapiUrl: null,
         public: false,
