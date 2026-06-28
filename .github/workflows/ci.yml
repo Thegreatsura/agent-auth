@@ -113,3 +113,58 @@ jobs:
 
       - name: Test packages
         run: pnpm exec turbo run test --filter="./packages/*"
+
+  db-migrations-current:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-db-migrations-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version-file: ".nvmrc"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # drizzle-kit generate only reads schema.ts (no DB connection), so this
+      # needs no DATABASE_URL and no secrets. Apps are discovered from their
+      # drizzle.config.ts so a newly added app is covered automatically.
+      # Contract: every app with a drizzle.config.ts must expose a db:generate
+      # script — a config without one fails this job (fail-closed) rather than
+      # being silently skipped. stdin is closed (< /dev/null) so an ambiguous
+      # rename prompt fails fast instead of hanging until the job timeout.
+      - name: Regenerate migrations from schema
+        run: |
+          set -e
+          for cfg in $(git ls-files '*/drizzle.config.ts'); do
+            app="$(dirname "$cfg")"
+            if ! node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));process.exit(pkg.scripts&&pkg.scripts['db:generate']?0:1)" "$app/package.json"; then
+              echo "::error ::$app has a drizzle.config.ts but no db:generate script. Add a db:generate script (drizzle-kit generate) so the migration drift guard can check it."
+              exit 1
+            fi
+            echo "::group::drizzle-kit generate ($app)"
+            (cd "$app" && pnpm run db:generate < /dev/null)
+            echo "::endgroup::"
+          done
+
+      - name: Fail if a schema change is missing its migration
+        run: |
+          CHANGED="$(git status --porcelain | grep '/drizzle/' || true)"
+          if [ -n "$CHANGED" ]; then
+            echo "::error ::A schema.ts change has no committed migration. Run 'pnpm db:generate' in the affected app and commit the drizzle/ folder."
+            echo "$CHANGED"
+            git add -A -- '*/drizzle/*'
+            git --no-pager diff --cached -- '*/drizzle/*'
+            exit 1
+          fi
+          echo "All Drizzle migrations are up to date."
