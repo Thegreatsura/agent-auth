@@ -107,7 +107,11 @@ try {
       endpoints = JSON.parse(row.endpoints ?? "{}");
     } catch {}
 
-    const had = Array.isArray(row.capabilities) ? row.capabilities.length : row.capabilities ? "?" : 0;
+    const had = Array.isArray(row.capabilities)
+      ? row.capabilities.length
+      : row.capabilities
+        ? "?"
+        : 0;
     const capabilitiesUrl = resolveEndpoint(row.issuer, endpoints.capabilities);
 
     if (!capabilitiesUrl) {
@@ -122,7 +126,12 @@ try {
     }
 
     console.log(`- ${row.name}: ${caps.length} capabilities (had ${had})`);
-    console.log(`    sample: ${caps.slice(0, 5).map((c) => c.name).join(", ")}${caps.length > 5 ? ", …" : ""}`);
+    console.log(
+      `    sample: ${caps
+        .slice(0, 5)
+        .map((c) => c.name)
+        .join(", ")}${caps.length > 5 ? ", …" : ""}`,
+    );
 
     if (!DRY_RUN) {
       const now = new Date().toISOString();
