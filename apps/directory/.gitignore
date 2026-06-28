@@ -4,3 +4,8 @@
 *.db-shm
 *.db-wal
 .vercel
+
+# Local dev env + ephemeral Postgres data dir
+.env
+.pgdata/
+.pgsock/

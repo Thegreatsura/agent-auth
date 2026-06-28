@@ -54,8 +54,16 @@ async function getPrimaryAccount(): Promise<StoredAuthAccount | null> {
   return accounts.find((account) => account.id === result.primaryAccountId) ?? accounts[0] ?? null;
 }
 
-async function saveAccounts(accounts: StoredAuthAccount[]): Promise<void> {
-  const primary = accounts[0];
+async function saveAccounts(
+  accounts: StoredAuthAccount[],
+  primaryAccountId?: string,
+): Promise<void> {
+  // Preserve the user's chosen primary across background writes (approval
+  // polling, token refresh, discovery). Only switch when a primary is set
+  // explicitly (e.g. sign-in), is unset, or no longer exists (e.g. removed).
+  const desiredId =
+    primaryAccountId ?? (await chrome.storage.local.get("primaryAccountId")).primaryAccountId;
+  const primary = accounts.find((account) => account.id === desiredId) ?? accounts[0];
   await chrome.storage.local.set({
     accounts,
     primaryAccountId: primary?.id,
@@ -70,6 +78,7 @@ async function upsertAccount(
   idpUrl: string,
   token: string,
   user: UserData,
+  makePrimary = false,
 ): Promise<StoredAuthAccount> {
   const accounts = await getAccounts();
   const accountId = buildAccountId(idpUrl, user.id);
@@ -80,7 +89,12 @@ async function upsertAccount(
     user,
     lastSeenIds: accounts.find((account) => account.id === accountId)?.lastSeenIds ?? [],
   };
-  await saveAccounts([nextAccount, ...accounts.filter((account) => account.id !== accountId)]);
+  // Explicit sign-in promotes the new account to primary; background discovery
+  // adds it without disturbing the user's current primary.
+  await saveAccounts(
+    [nextAccount, ...accounts.filter((account) => account.id !== accountId)],
+    makePrimary ? accountId : undefined,
+  );
   return nextAccount;
 }
 
@@ -218,7 +232,7 @@ async function attemptSessionExtraction() {
 
   stopSignInMonitoring();
 
-  await upsertAccount(idpUrl, result.token, result.user);
+  await upsertAccount(idpUrl, result.token, result.user, true);
 
   await chrome.storage.local.set({
     pendingSignIn: { idpUrl, tabId, completed: true, user: result.user },

@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
- * Proxy route for Vercel MCP OAuth callback.
- * Vercel's DCR restricts redirect URIs to simple paths, so we receive
- * the callback at /callback and forward it to Better Auth's handler.
+ * Forwards the "Sign in with Vercel" OAuth callback to Better Auth's handler.
+ * Registering a short `/callback` redirect URI in the Vercel dashboard is
+ * simpler than the full Better Auth callback path it resolves to below.
  */
 export function GET(req: NextRequest) {
   const url = new URL(req.url);

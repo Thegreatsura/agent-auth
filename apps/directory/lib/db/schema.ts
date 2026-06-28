@@ -1,5 +1,6 @@
 import { boolean, pgTable, text, timestamp, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import type { Capability } from "@/lib/openapi";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -83,6 +84,11 @@ export const provider = pgTable(
     jwksUri: text("jwks_uri"),
     categories: text("categories").notNull().default("[]"),
     logoUrl: text("logo_url"),
+    // Capabilities derived from an OpenAPI spec (null for native Agent Auth
+    // providers, whose capabilities are fetched live from /capability/list).
+    capabilities: jsonb("capabilities").$type<Capability[]>(),
+    sourceType: text("source_type").notNull().default("agent-auth"),
+    openapiUrl: text("openapi_url"),
     public: boolean("public").notNull().default(false),
     verified: boolean("verified").notNull().default(false),
     lastCheckedAt: text("last_checked_at"),

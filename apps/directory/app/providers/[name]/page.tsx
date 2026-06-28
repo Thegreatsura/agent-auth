@@ -5,6 +5,7 @@ import {
   Clock,
   ExternalLink,
   EyeOff,
+  FileJson,
   Globe,
   Key,
   Shield,
@@ -18,6 +19,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { provider } from "@/lib/db/schema";
 import { safeJsonParse } from "@/lib/utils";
+import type { Capability } from "@/lib/openapi";
 import { TogglePublicButton } from "./toggle-public";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,8 @@ export default async function ProviderDetailPage({
   const algorithms = safeJsonParse<string[]>(row.algorithms, []);
   const categories = safeJsonParse<string[]>(row.categories, []);
   const endpoints = safeJsonParse<Record<string, string>>(row.endpoints, {});
+  const capabilities = (row.capabilities ?? []) as Capability[];
+  const isOpenApi = row.sourceType === "openapi";
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -85,6 +89,12 @@ export default async function ProviderDetailPage({
                 )}
               </div>
               <p className="text-xs font-mono text-foreground/40 mt-1 break-all">{row.name}</p>
+              {isOpenApi && (
+                <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-mono text-foreground/50 border border-foreground/[0.12] bg-foreground/[0.03] px-2 py-0.5">
+                  <FileJson className="h-3 w-3" />
+                  Derived from OpenAPI
+                </span>
+              )}
             </div>
             <a
               href={row.url}
@@ -132,85 +142,161 @@ export default async function ProviderDetailPage({
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-          <div>
-            <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
-              Modes
-            </h3>
-            <div className="space-y-2">
-              {modes.map((mode) => (
-                <div
-                  key={mode}
-                  className="flex items-center gap-2 text-xs text-foreground/60 font-mono border border-foreground/[0.06] px-3 py-2"
-                >
-                  <Shield className="h-3 w-3 text-foreground/30" />
-                  {mode}
+        {(modes.length > 0 || approvalMethods.length > 0) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+            {modes.length > 0 && (
+              <div>
+                <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
+                  Modes
+                </h3>
+                <div className="space-y-2">
+                  {modes.map((mode) => (
+                    <div
+                      key={mode}
+                      className="flex items-center gap-2 text-xs text-foreground/60 font-mono border border-foreground/[0.06] px-3 py-2"
+                    >
+                      <Shield className="h-3 w-3 text-foreground/30" />
+                      {mode}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
-              Approval Methods
-            </h3>
-            <div className="space-y-2">
-              {approvalMethods.map((method) => (
-                <div
-                  key={method}
-                  className="flex items-center gap-2 text-xs text-foreground/60 font-mono border border-foreground/[0.06] px-3 py-2"
-                >
-                  <Key className="h-3 w-3 text-foreground/30" />
-                  {method}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-10">
-          <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
-            Endpoints
-          </h3>
-          <div className="border border-foreground/[0.06] divide-y divide-foreground/[0.06] overflow-x-auto">
-            {Object.entries(endpoints).map(([key, value]) => (
-              <div
-                key={key}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-4 px-4 py-2.5 text-xs font-mono"
-              >
-                <span className="text-foreground/50 shrink-0">{key}</span>
-                <span className="text-foreground/30 break-all">{value}</span>
               </div>
-            ))}
+            )}
+            {approvalMethods.length > 0 && (
+              <div>
+                <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
+                  Approval Methods
+                </h3>
+                <div className="space-y-2">
+                  {approvalMethods.map((method) => (
+                    <div
+                      key={method}
+                      className="flex items-center gap-2 text-xs text-foreground/60 font-mono border border-foreground/[0.06] px-3 py-2"
+                    >
+                      <Key className="h-3 w-3 text-foreground/30" />
+                      {method}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
+
+        {Object.keys(endpoints).length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
+              Endpoints
+            </h3>
+            <div className="border border-foreground/[0.06] divide-y divide-foreground/[0.06] overflow-x-auto">
+              {Object.entries(endpoints).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-4 px-4 py-2.5 text-xs font-mono"
+                >
+                  <span className="text-foreground/50 shrink-0">{key}</span>
+                  <span className="text-foreground/30 break-all">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {capabilities.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
+              Capabilities <span className="text-foreground/25">({capabilities.length})</span>
+            </h3>
+            <div className="border border-foreground/[0.06] divide-y divide-foreground/[0.06]">
+              {capabilities.map((cap) => {
+                const required = (cap.input as { required?: string[] } | undefined)?.required ?? [];
+                return (
+                  <div key={cap.name} className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <code className="text-xs font-mono text-foreground/70 break-all">
+                        {cap.name}
+                      </code>
+                      {cap.approvalStrength && (
+                        <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-foreground/40 border border-foreground/[0.08] px-2 py-0.5">
+                          {cap.approvalStrength}
+                        </span>
+                      )}
+                    </div>
+                    {(cap.method || cap.path) && (
+                      <div className="flex items-center gap-2 text-[10px] font-mono">
+                        {cap.method && (
+                          <span className="shrink-0 text-foreground/45 border border-foreground/[0.08] px-1.5 py-0.5 uppercase tracking-wider">
+                            {cap.method}
+                          </span>
+                        )}
+                        {cap.path && <span className="text-foreground/35 break-all">{cap.path}</span>}
+                      </div>
+                    )}
+                    {cap.description && (
+                      <p className="text-xs text-foreground/50 leading-relaxed">{cap.description}</p>
+                    )}
+                    {required.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-foreground/30">
+                          requires
+                        </span>
+                        {required.map((field) => (
+                          <span
+                            key={field}
+                            className="text-[10px] font-mono text-foreground/45 border border-foreground/[0.08] px-1.5 py-0.5"
+                          >
+                            {field}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <h3 className="text-[11px] font-mono uppercase tracking-wider text-foreground/40 mb-3">
             Quick Start
           </h3>
           <div className="space-y-3">
-            <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-3 sm:p-4 overflow-x-auto">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-foreground/30 mb-2">
-                Discovery
-              </p>
-              <code className="text-xs font-mono text-foreground/60 block whitespace-pre">
-                {`curl ${row.url}/.well-known/agent-configuration`}
-              </code>
-            </div>
-            <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-3 sm:p-4 overflow-x-auto">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-foreground/30 mb-2">
-                Register an Agent
-              </p>
-              <code className="text-xs font-mono text-foreground/60 block whitespace-pre">
-                {`curl -X POST ${row.url}${endpoints.register} \\
+            {isOpenApi ? (
+              <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-3 sm:p-4 overflow-x-auto">
+                <p className="text-[10px] font-mono uppercase tracking-wider text-foreground/30 mb-2">
+                  OpenAPI Spec
+                </p>
+                <code className="text-xs font-mono text-foreground/60 block whitespace-pre">
+                  {`curl ${row.openapiUrl ?? row.url}`}
+                </code>
+              </div>
+            ) : (
+              <>
+                <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-3 sm:p-4 overflow-x-auto">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-foreground/30 mb-2">
+                    Discovery
+                  </p>
+                  <code className="text-xs font-mono text-foreground/60 block whitespace-pre">
+                    {`curl ${row.url}/.well-known/agent-configuration`}
+                  </code>
+                </div>
+                <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-3 sm:p-4 overflow-x-auto">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-foreground/30 mb-2">
+                    Register an Agent
+                  </p>
+                  <code className="text-xs font-mono text-foreground/60 block whitespace-pre">
+                    {`curl -X POST ${row.url}${endpoints.register} \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "my-agent",
     "public_key": "<your-ed25519-public-key>",
     "mode": "${modes[0] ?? "delegated"}"
   }'`}
-              </code>
-            </div>
+                  </code>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -219,13 +305,18 @@ export default async function ProviderDetailPage({
 }
 
 function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  const isEmpty = value.trim() === "";
   return (
     <div className="border border-foreground/[0.06] bg-foreground/[0.02] p-4 space-y-2">
       <div className="flex items-center gap-2 text-foreground/35">
         {icon}
         <span className="text-[10px] font-mono uppercase tracking-wider">{label}</span>
       </div>
-      <p className="text-xs font-mono text-foreground/60 break-all">{value}</p>
+      <p
+        className={`text-xs font-mono break-all ${isEmpty ? "text-foreground/25" : "text-foreground/60"}`}
+      >
+        {isEmpty ? "N/A" : value}
+      </p>
     </div>
   );
 }

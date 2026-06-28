@@ -267,12 +267,45 @@ export async function fetchReAuthConfig(): Promise<{
   }
 }
 
+/**
+ * Server host payloads use snake_case and `default_capabilities`; the client
+ * `Host` type uses camelCase and `scopes`. Normalize at the boundary (mirrors
+ * how listAgents maps `permissions` → `scopes`). `default_capabilities` is the
+ * current field; `scopes` is kept as a fallback for older proxy versions.
+ */
+type RawHost = {
+  id: string;
+  name?: string | null;
+  default_capabilities?: string[];
+  scopes?: string[];
+  status: string;
+  activated_at?: string | null;
+  expires_at?: string | null;
+  last_used_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+function mapHost(raw: RawHost): Host {
+  return {
+    id: raw.id,
+    name: raw.name ?? null,
+    scopes: raw.default_capabilities ?? raw.scopes ?? [],
+    status: raw.status,
+    activatedAt: raw.activated_at ?? null,
+    expiresAt: raw.expires_at ?? null,
+    lastUsedAt: raw.last_used_at ?? null,
+    createdAt: raw.created_at ?? "",
+    updatedAt: raw.updated_at ?? "",
+  };
+}
+
 export async function listHosts(): Promise<{
   data?: Host[];
   error?: string;
 }> {
   try {
-    const res = await authFetch("/agent/host/list");
+    const res = await authFetch("/host/list");
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       return {
@@ -280,7 +313,7 @@ export async function listHosts(): Promise<{
       };
     }
     const json = await res.json();
-    return { data: (json.hosts ?? []) as Host[] };
+    return { data: ((json.hosts ?? []) as RawHost[]).map(mapHost) };
   } catch {
     return { error: "Failed to connect" };
   }
@@ -293,8 +326,8 @@ export async function createHost(
   try {
     const body: Record<string, unknown> = {};
     if (name) body.name = name;
-    if (scopes?.length) body.scopes = scopes;
-    const res = await authFetch("/agent/host/create", {
+    if (scopes?.length) body.default_capabilities = scopes;
+    const res = await authFetch("/host/create", {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -303,7 +336,23 @@ export async function createHost(
       return {
         error: (json as { message?: string }).message ?? "Failed to create device",
       };
-    return { data: json as CreatedHost };
+    const created = json as {
+      hostId: string;
+      default_capabilities?: string[];
+      scopes?: string[];
+      status: string;
+      enrollmentToken?: string;
+      enrollmentTokenExpiresAt?: string;
+    };
+    return {
+      data: {
+        hostId: created.hostId,
+        scopes: created.default_capabilities ?? created.scopes ?? [],
+        status: created.status,
+        enrollmentToken: created.enrollmentToken,
+        enrollmentTokenExpiresAt: created.enrollmentTokenExpiresAt,
+      },
+    };
   } catch {
     return { error: "Failed to connect" };
   }
@@ -311,13 +360,13 @@ export async function createHost(
 
 export async function getHost(hostId: string): Promise<{ data?: Host; error?: string }> {
   try {
-    const res = await authFetch(`/agent/host/get?hostId=${encodeURIComponent(hostId)}`);
+    const res = await authFetch(`/host/get?host_id=${encodeURIComponent(hostId)}`);
     const json = await res.json();
     if (!res.ok)
       return {
         error: (json as { message?: string }).message ?? "Failed to get device",
       };
-    return { data: json as Host };
+    return { data: mapHost(json as RawHost) };
   } catch {
     return { error: "Failed to connect" };
   }
@@ -325,9 +374,9 @@ export async function getHost(hostId: string): Promise<{ data?: Host; error?: st
 
 export async function revokeHost(hostId: string): Promise<{ error?: string }> {
   try {
-    const res = await authFetch("/agent/host/revoke", {
+    const res = await authFetch("/host/revoke", {
       method: "POST",
-      body: JSON.stringify({ hostId }),
+      body: JSON.stringify({ host_id: hostId }),
     });
     if (!res.ok) {
       const json = await res.json();
@@ -336,28 +385,6 @@ export async function revokeHost(hostId: string): Promise<{ error?: string }> {
       };
     }
     return {};
-  } catch {
-    return { error: "Failed to connect" };
-  }
-}
-
-export async function claimHost(hostId: string): Promise<{
-  data?: { host_id: string; user_id: string; status: string };
-  error?: string;
-}> {
-  try {
-    const res = await authFetch("/agent/approve-connect-account", {
-      method: "POST",
-      body: JSON.stringify({ hostId }),
-    });
-    const json = await res.json();
-    if (!res.ok)
-      return {
-        error: (json as { message?: string }).message ?? "Failed to link device",
-      };
-    return {
-      data: json as { host_id: string; user_id: string; status: string },
-    };
   } catch {
     return { error: "Failed to connect" };
   }

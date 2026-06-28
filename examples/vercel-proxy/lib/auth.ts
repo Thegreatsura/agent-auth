@@ -17,7 +17,6 @@ import {
 
 const VERCEL_OPENAPI_URL =
   "https://spec.speakeasy.com/vercel/vercel-docs/vercel-oas-with-code-samples";
-const VERCEL_MCP_RESOURCE = "https://mcp.vercel.com/";
 const VERCEL_MCP_CLIENT_ID = process.env.VERCEL_MCP_CLIENT_ID as string;
 const VERCEL_MCP_REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/callback`;
 const VERCEL_MASTER_API_KEY = process.env.VERCEL_MASTER_API_KEY as string;
@@ -152,26 +151,24 @@ export const auth = betterAuth({
           clientId: VERCEL_MCP_CLIENT_ID,
           redirectURI: `${process.env.BETTER_AUTH_URL}/callback`,
           authorizationUrl: "https://vercel.com/oauth/authorize",
-          tokenUrl: "https://vercel.com/api/login/oauth/token",
+          tokenUrl: "https://api.vercel.com/login/oauth/token",
           scopes: ["openid", "email", "profile", "offline_access"],
           pkce: true,
           prompt: "consent",
-          authorizationUrlParams: {
-            resource: VERCEL_MCP_RESOURCE,
-          },
+          // Public client (token_endpoint_auth_method = "none"): the token
+          // exchange is authenticated with PKCE alone — no client_secret.
           getToken: async ({ code, codeVerifier }) => {
             const params = new URLSearchParams({
               grant_type: "authorization_code",
               client_id: VERCEL_MCP_CLIENT_ID,
               code,
               redirect_uri: VERCEL_MCP_REDIRECT_URI,
-              resource: VERCEL_MCP_RESOURCE,
             });
             if (codeVerifier) {
               params.set("code_verifier", codeVerifier);
             }
 
-            const response = await fetch("https://vercel.com/api/login/oauth/token", {
+            const response = await fetch("https://api.vercel.com/login/oauth/token", {
               method: "POST",
               headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -198,7 +195,7 @@ export const auth = betterAuth({
           },
           getUserInfo: async (tokens) => {
             const response = await fetch("https://api.vercel.com/login/oauth/userinfo", {
-              method: "POST",
+              method: "GET",
               headers: {
                 Authorization: `Bearer ${tokens.accessToken}`,
               },

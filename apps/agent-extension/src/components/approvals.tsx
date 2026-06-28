@@ -155,7 +155,6 @@ function RequestCard({
             </div>
             <p className="text-[11px] text-muted-foreground truncate">
               {request.account_label}
-              {request.client_id ? ` · ${request.client_id}` : ""}
               {" · "}
               {formatRelativeTime(request.created_at)}
             </p>
