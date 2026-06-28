@@ -229,11 +229,15 @@ export default async function ProviderDetailPage({
                             {cap.method}
                           </span>
                         )}
-                        {cap.path && <span className="text-foreground/35 break-all">{cap.path}</span>}
+                        {cap.path && (
+                          <span className="text-foreground/35 break-all">{cap.path}</span>
+                        )}
                       </div>
                     )}
                     {cap.description && (
-                      <p className="text-xs text-foreground/50 leading-relaxed">{cap.description}</p>
+                      <p className="text-xs text-foreground/50 leading-relaxed">
+                        {cap.description}
+                      </p>
                     )}
                     {required.length > 0 && (
                       <div className="flex items-center gap-1.5 flex-wrap">

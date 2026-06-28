@@ -93,9 +93,10 @@ export default function SubmitPage() {
           <h1 className="text-lg font-semibold text-foreground">Submit a Provider</h1>
           {mode === "openapi" ? (
             <p className="text-xs text-foreground/45 leading-relaxed">
-              Paste a link to an OpenAPI 3.x spec. We'll derive an Agent Auth capability list from it
-              with <code className="text-[10px] font-mono text-foreground/55">fromOpenAPI()</code> —
-              so a service can be discovered even before it adopts Agent Auth.
+              Paste a link to an OpenAPI 3.x spec. We'll derive an Agent Auth capability list from
+              it with{" "}
+              <code className="text-[10px] font-mono text-foreground/55">fromOpenAPI()</code> — so a
+              service can be discovered even before it adopts Agent Auth.
             </p>
           ) : (
             <p className="text-xs text-foreground/45 leading-relaxed">

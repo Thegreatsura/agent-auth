@@ -149,7 +149,11 @@ export async function POST(request: Request) {
         );
       }
 
-      const nameClash = await db.select().from(provider).where(eq(provider.name, derived.name)).limit(1);
+      const nameClash = await db
+        .select()
+        .from(provider)
+        .where(eq(provider.name, derived.name))
+        .limit(1);
 
       if (nameClash.length > 0) {
         return Response.json(

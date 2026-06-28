@@ -22,7 +22,11 @@ const mailSpec = {
           required: true,
           content: {
             "application/json": {
-              schema: { type: "object", required: ["to", "subject"], properties: { to: { type: "string" } } },
+              schema: {
+                type: "object",
+                required: ["to", "subject"],
+                properties: { to: { type: "string" } },
+              },
             },
           },
         },
