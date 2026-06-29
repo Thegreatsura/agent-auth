@@ -15,7 +15,7 @@ export {
   toAISDKTools,
   toAnthropicTools,
 } from "./tools";
-export { SERVER_INSTRUCTIONS } from "./instructions";
+export { SERVER_INSTRUCTIONS, AGENT_AUTH_SKILL } from "./instructions";
 
 export type {
   AgentJWK,

@@ -3,7 +3,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
-import { SERVER_INSTRUCTIONS } from "@auth/agent";
+import { SERVER_INSTRUCTIONS, AGENT_AUTH_SKILL } from "@auth/agent";
 import { sql } from "@/lib/db";
 import { getToolsForUser, jsonSchemaToZod } from "@/lib/mcp";
 
@@ -97,6 +97,20 @@ function createServerForUser(userId: string): McpServer {
       },
     );
   }
+
+  server.registerResource(
+    "agent-auth-skill",
+    "agent-auth://skill",
+    {
+      title: "Using Agent Auth",
+      description:
+        "Runbook for the Agent Auth tools: workflow, agent-id scoping, constraints, and failure handling.",
+      mimeType: "text/markdown",
+    },
+    (uri) => ({
+      contents: [{ uri: uri.href, mimeType: "text/markdown", text: AGENT_AUTH_SKILL }],
+    }),
+  );
 
   return server;
 }

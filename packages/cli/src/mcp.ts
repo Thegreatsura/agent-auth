@@ -5,6 +5,7 @@ import {
   getAgentAuthTools,
   filterTools,
   SERVER_INSTRUCTIONS,
+  AGENT_AUTH_SKILL,
   type ToolParameters,
 } from "@auth/agent";
 import { createClient, type ClientConfig } from "./client.js";
@@ -120,6 +121,20 @@ export async function startMcpServer(config: ClientConfig): Promise<void> {
       },
     );
   }
+
+  server.registerResource(
+    "agent-auth-skill",
+    "agent-auth://skill",
+    {
+      title: "Using Agent Auth",
+      description:
+        "Runbook for the Agent Auth tools: workflow, agent-id scoping, constraints, and failure handling.",
+      mimeType: "text/markdown",
+    },
+    (uri) => ({
+      contents: [{ uri: uri.href, mimeType: "text/markdown", text: AGENT_AUTH_SKILL }],
+    }),
+  );
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
