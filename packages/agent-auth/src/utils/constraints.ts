@@ -24,6 +24,41 @@ function isPrimitive(v: ConstraintPrimitive | undefined): v is ConstraintPrimiti
   return typeof v === "string" || typeof v === "number" || typeof v === "boolean";
 }
 
+/**
+ * Coerce a value to a finite number for numeric (min/max) comparison.
+ *
+ * Execution arguments cross the LLM → JSON tool-call → HTTP boundary, where
+ * numbers are routinely emitted as strings ("5" instead of 5). Without this,
+ * an in-range value is rejected with constraint_violated. Only finite numeric
+ * strings coerce; "", whitespace, "abc", and Infinity stay non-numeric so they
+ * still (correctly) fail a numeric bound.
+ */
+function toComparableNumber(v: ConstraintPrimitive | undefined): number | undefined {
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
+}
+
+/**
+ * Type-tolerant equality for eq / in / not_in, directed by the *operand's*
+ * type so a constraint authored as a number matches a stringified number and
+ * vice-versa — without making unrelated string IDs collide (operand "007"
+ * never equals 7). This also closes a not_in bypass: not_in:[666] must still
+ * reject an argument of "666".
+ */
+function primitivesEqual(
+  actual: ConstraintPrimitive | undefined,
+  operand: ConstraintPrimitive,
+): boolean {
+  if (actual === operand) return true;
+  if (typeof operand === "number") return toComparableNumber(actual) === operand;
+  if (typeof operand === "string" && typeof actual === "number") return String(actual) === operand;
+  return false;
+}
+
 function checkField(
   field: string,
   constraint: ConstraintValue,
@@ -37,7 +72,7 @@ function checkField(
     typeof constraint === "number" ||
     typeof constraint === "boolean"
   ) {
-    if (actual !== constraint) {
+    if (!primitivesEqual(actual, constraint)) {
       violations.push({ field, constraint: { eq: constraint }, actual });
     }
     return { violations, unknownOps };
@@ -47,36 +82,37 @@ function checkField(
   for (const key of Object.keys(ops)) {
     if (!KNOWN_OPERATORS.has(key)) {
       unknownOps.push(key);
-      continue;
     }
   }
 
   if (ops.eq !== undefined) {
-    if (actual !== ops.eq) {
+    if (!primitivesEqual(actual, ops.eq)) {
       violations.push({ field, constraint: { eq: ops.eq }, actual });
     }
   }
 
   if (ops.min !== undefined) {
-    if (typeof actual !== "number" || actual < ops.min) {
+    const n = toComparableNumber(actual);
+    if (n === undefined || n < ops.min) {
       violations.push({ field, constraint: { min: ops.min }, actual });
     }
   }
 
   if (ops.max !== undefined) {
-    if (typeof actual !== "number" || actual > ops.max) {
+    const n = toComparableNumber(actual);
+    if (n === undefined || n > ops.max) {
       violations.push({ field, constraint: { max: ops.max }, actual });
     }
   }
 
   if (ops.in !== undefined) {
-    if (!isPrimitive(actual) || !ops.in.includes(actual)) {
+    if (!ops.in.some((v) => primitivesEqual(actual, v))) {
       violations.push({ field, constraint: { in: ops.in }, actual });
     }
   }
 
   if (ops.not_in !== undefined) {
-    if (isPrimitive(actual) && ops.not_in.includes(actual)) {
+    if (ops.not_in.some((v) => primitivesEqual(actual, v))) {
       violations.push({ field, constraint: { not_in: ops.not_in }, actual });
     }
   }

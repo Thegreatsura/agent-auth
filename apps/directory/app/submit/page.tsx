@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowLeft, CheckCircle, FileJson, Globe, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle, Globe, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,8 +10,6 @@ import { useSession } from "@/lib/auth-client";
 interface SubmitResult {
   id: string;
   name: string;
-  source_type?: string;
-  capabilities_count?: number;
   config: {
     provider_name: string;
     description?: string;
@@ -30,7 +28,6 @@ export default function SubmitPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
-  const [mode, setMode] = useState<"agent-auth" | "openapi">("agent-auth");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +41,7 @@ export default function SubmitPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: url.trim(),
-          type: mode,
+          type: "agent-auth",
           displayName: displayName.trim() || undefined,
           categories: categories
             .split(",")
@@ -91,22 +88,13 @@ export default function SubmitPage() {
 
         <div className="space-y-2 mb-8">
           <h1 className="text-lg font-semibold text-foreground">Submit a Provider</h1>
-          {mode === "openapi" ? (
-            <p className="text-xs text-foreground/45 leading-relaxed">
-              Paste a link to an OpenAPI 3.x spec. We'll derive an Agent Auth capability list from
-              it with{" "}
-              <code className="text-[10px] font-mono text-foreground/55">fromOpenAPI()</code> — so a
-              service can be discovered even before it adopts Agent Auth.
-            </p>
-          ) : (
-            <p className="text-xs text-foreground/45 leading-relaxed">
-              Enter the URL of an Agent Auth-capable service. We'll auto-discover its configuration
-              from{" "}
-              <code className="text-[10px] font-mono text-foreground/55">
-                /.well-known/agent-configuration
-              </code>
-            </p>
-          )}
+          <p className="text-xs text-foreground/45 leading-relaxed">
+            Enter the URL of an Agent Auth-capable service. We'll auto-discover its configuration
+            from{" "}
+            <code className="text-[10px] font-mono text-foreground/55">
+              /.well-known/agent-configuration
+            </code>
+          </p>
         </div>
 
         {isPending || isSignedOut ? (
@@ -139,11 +127,6 @@ export default function SubmitPage() {
                     Modes: {result.config.modes.join(", ")}
                   </p>
                 )}
-                {result.source_type === "openapi" && (
-                  <p className="text-xs font-mono text-success/70">
-                    {result.capabilities_count ?? 0} capabilities derived from OpenAPI
-                  </p>
-                )}
               </div>
             </div>
 
@@ -171,36 +154,9 @@ export default function SubmitPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("agent-auth")}
-                className={`flex items-center justify-center gap-1.5 border px-3 py-2.5 text-[11px] font-mono transition-all ${
-                  mode === "agent-auth"
-                    ? "border-foreground/30 bg-foreground/[0.06] text-foreground/80"
-                    : "border-foreground/[0.08] text-foreground/40 hover:text-foreground/60"
-                }`}
-              >
-                <Globe className="h-3.5 w-3.5" />
-                Agent Auth service
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("openapi")}
-                className={`flex items-center justify-center gap-1.5 border px-3 py-2.5 text-[11px] font-mono transition-all ${
-                  mode === "openapi"
-                    ? "border-foreground/30 bg-foreground/[0.06] text-foreground/80"
-                    : "border-foreground/[0.08] text-foreground/40 hover:text-foreground/60"
-                }`}
-              >
-                <FileJson className="h-3.5 w-3.5" />
-                OpenAPI spec
-              </button>
-            </div>
-
             <div className="space-y-2">
               <label className="text-[11px] font-mono uppercase tracking-wider text-foreground/40">
-                {mode === "openapi" ? "OpenAPI spec URL *" : "Service URL *"}
+                Service URL *
               </label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/25" />
@@ -209,11 +165,7 @@ export default function SubmitPage() {
                   required
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder={
-                    mode === "openapi"
-                      ? "https://api.example.com/openapi.json"
-                      : "https://myservice.com"
-                  }
+                  placeholder="https://myservice.com"
                   className="w-full bg-foreground/[0.03] border border-foreground/[0.08] placeholder:text-foreground/25 text-foreground font-mono text-xs focus:outline-none focus:border-foreground/20 focus:bg-foreground/[0.05] transition-all pl-10 pr-4 py-2.5"
                 />
               </div>
@@ -260,28 +212,17 @@ export default function SubmitPage() {
               {loading ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {mode === "openapi" ? "Deriving..." : "Discovering..."}
+                  Discovering...
                 </>
-              ) : mode === "openapi" ? (
-                "Derive & Register"
               ) : (
                 "Discover & Register"
               )}
             </button>
 
             <p className="text-[10px] font-mono text-foreground/25 text-center">
-              {mode === "openapi" ? (
-                <>
-                  We'll fetch the spec and derive a capability list with{" "}
-                  <code className="text-foreground/35">fromOpenAPI()</code>.
-                </>
-              ) : (
-                <>
-                  We'll fetch the{" "}
-                  <code className="text-foreground/35">/.well-known/agent-configuration</code>{" "}
-                  endpoint to verify and populate provider details.
-                </>
-              )}
+              We'll fetch the{" "}
+              <code className="text-foreground/35">/.well-known/agent-configuration</code> endpoint
+              to verify and populate provider details.
               <br />
               Submissions are not public by default and will be reviewed before appearing in the
               directory.

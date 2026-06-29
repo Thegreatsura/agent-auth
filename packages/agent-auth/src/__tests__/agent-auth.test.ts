@@ -1504,6 +1504,77 @@ describe("Constraints (§2.13)", () => {
     expect(execBody.data.result).toBe("ok");
   });
 
+  it("execute coerces stringified numeric arguments (LLM/JSON boundary)", async () => {
+    const t = await getTestInstance(
+      {
+        plugins: [
+          agentAuth({
+            capabilities: TEST_CAPABILITIES,
+            modes: ["delegated"],
+            defaultHostCapabilities: ["check_balance", "transfer"],
+            onExecute: ({ capability, arguments: args }) => ({
+              capability,
+              result: "ok",
+              args,
+            }),
+          }),
+        ],
+      },
+      { clientOptions: { plugins: [agentAuthClientPlugin()] } },
+    );
+    const { headers: h } = await t.signInWithTestUser();
+    const cookie = h.get("cookie") ?? "";
+
+    const hk = await generateTestKeypair();
+    const createRes = await t.auth.handler(
+      new Request(`${API}/host/create`, {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie },
+        body: JSON.stringify({
+          name: "Coercion Host",
+          public_key: hk.publicKey,
+          default_capabilities: ["check_balance", "transfer"],
+        }),
+      }),
+    );
+    const { hostId: hId } = await json<{ hostId: string }>(createRes);
+
+    const ak = await generateTestKeypair();
+    const hostJWT = await createHostJWT(hk.privateKey, hk.publicKey, ak.publicKey, hId);
+    const regRes = await t.auth.handler(
+      new Request(`${API}/agent/register`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${hostJWT}` },
+        body: JSON.stringify({
+          name: "Coercion Agent",
+          capabilities: [
+            "check_balance",
+            { name: "transfer", constraints: { amount: { max: 1000 } } },
+          ],
+          mode: "delegated",
+        }),
+      }),
+    );
+    const { agent_id: aId } = await json<{ agent_id: string }>(regRes);
+
+    const jwt = await createAgentJWT(ak.privateKey, aId);
+    // amount arrives as a string "500" — an in-range value that the old strict
+    // matcher rejected with constraint_violated.
+    const execRes = await t.auth.handler(
+      new Request(`${API}/capability/execute`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ capability: "transfer", arguments: { amount: "500", to: "alice" } }),
+      }),
+    );
+
+    expect(execRes.ok).toBe(true);
+    const execBody = await json<{ data: { result: string; args: { amount: unknown } } }>(execRes);
+    expect(execBody.data.result).toBe("ok");
+    // schema-aware coercion: onExecute receives a real number, not "500"
+    expect(execBody.data.args.amount).toBe(500);
+  });
+
   it("execute fails with constraint_violated when arguments violate constraints", async () => {
     const t = await getTestInstance(
       {

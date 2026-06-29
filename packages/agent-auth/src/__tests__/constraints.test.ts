@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateConstraints, narrowConstraints } from "../utils/constraints";
+import { validateConstraints, narrowConstraints, findMatchingGrant } from "../utils/constraints";
 
 describe("validateConstraints", () => {
   it("passes when all eq constraints match", () => {
@@ -102,6 +102,68 @@ describe("validateConstraints", () => {
       { amount: "ten" as unknown as number },
     );
     expect(result.valid).toBe(false);
+  });
+});
+
+// Arguments cross the LLM → JSON tool-call → HTTP boundary, where numbers are
+// routinely emitted as strings ("5"). The matcher must compare by value, not by
+// JS type, or in-range calls are wrongly rejected with constraint_violated.
+describe("validateConstraints — numeric coercion across the JSON boundary", () => {
+  const s = (v: unknown) => ({ maxResults: v as number });
+
+  it("accepts an in-range stringified number against max", () => {
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("5")).valid).toBe(true);
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("1")).valid).toBe(true);
+  });
+
+  it("still rejects an out-of-range stringified number against max", () => {
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("6")).valid).toBe(false);
+  });
+
+  it("accepts/rejects stringified numbers against min", () => {
+    expect(validateConstraints({ maxResults: { min: 10 } }, s("10")).valid).toBe(true);
+    expect(validateConstraints({ maxResults: { min: 10 } }, s("9")).valid).toBe(false);
+  });
+
+  it("rejects non-numeric and empty strings against a numeric bound", () => {
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("abc")).valid).toBe(false);
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("")).valid).toBe(false);
+    expect(validateConstraints({ maxResults: { max: 5 } }, s("   ")).valid).toBe(false);
+  });
+
+  it("matches eq across number/string in both directions", () => {
+    expect(
+      validateConstraints({ count: { eq: 3 } }, { count: "3" as unknown as number }).valid,
+    ).toBe(true);
+    expect(validateConstraints({ count: { eq: "3" } }, { count: 3 }).valid).toBe(true);
+  });
+
+  it("matches a stringified number against a numeric in-set", () => {
+    expect(
+      validateConstraints({ n: { in: [1, 2, 3] } }, { n: "2" as unknown as number }).valid,
+    ).toBe(true);
+  });
+
+  it("closes the not_in bypass for stringified numbers", () => {
+    // not_in:[666] must reject 666 whether it arrives as a number or "666"
+    expect(validateConstraints({ id: { not_in: [666] } }, { id: 666 }).valid).toBe(false);
+    expect(
+      validateConstraints({ id: { not_in: [666] } }, { id: "666" as unknown as number }).valid,
+    ).toBe(false);
+  });
+
+  it("does not collide unrelated string ids that look numeric", () => {
+    // operand is a string set; a numeric-looking id must match by string, so
+    // "007" is not equal to 7
+    expect(validateConstraints({ id: { in: ["007"] } }, { id: 7 as unknown as string }).valid).toBe(
+      false,
+    );
+  });
+
+  it("findMatchingGrant selects a constrained grant for a stringified arg", () => {
+    const grants = [{ constraints: { maxResults: { max: 5 } } }];
+    expect(findMatchingGrant(grants, { maxResults: "5" as unknown as number })).toBe(grants[0]);
+    expect(findMatchingGrant(grants, { maxResults: "9" as unknown as number })).toBeUndefined();
   });
 });
 

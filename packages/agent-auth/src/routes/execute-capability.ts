@@ -7,6 +7,7 @@ import { emit } from "../emit";
 import { isAsyncResult, isStreamResult } from "../execute-helpers";
 import { tryAutoGrantFromHostBudget } from "./_helpers";
 import { validateConstraints, findMatchingGrant } from "../utils/constraints";
+import { coerceArgsToSchema } from "../utils/coerce-args";
 import type {
   AgentCapabilityGrant,
   AgentSession,
@@ -57,7 +58,7 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
         );
       }
 
-      const { capability: capabilityName, arguments: args } = ctx.body;
+      const { capability: capabilityName, arguments: rawArgs } = ctx.body;
 
       let allCapabilities = opts.capabilities ?? [];
 
@@ -81,6 +82,13 @@ export function executeCapability(opts: ResolvedAgentAuthOptions) {
           `Capability "${capabilityName}" does not exist.`,
         );
       }
+
+      // Coerce arguments to the capability's declared input types before
+      // constraint-checking and execution. LLM tool calls routinely send
+      // numbers/booleans as strings ("5", "true"); without this an in-range
+      // numeric constraint (e.g. { maxResults: { max: 5 } }) would reject a
+      // valid call and onExecute would receive the wrong type.
+      const args = coerceArgsToSchema(rawArgs, capabilityDef.input);
 
       // §5.3: If the JWT included a `capabilities` claim, the middleware
       // already narrowed capabilityGrants to that intersection. Check

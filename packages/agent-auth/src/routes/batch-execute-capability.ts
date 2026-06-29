@@ -7,6 +7,7 @@ import { emit } from "../emit";
 import { isAsyncResult, isStreamResult } from "../execute-helpers";
 import { tryAutoGrantFromHostBudget } from "./_helpers";
 import { findMatchingGrant } from "../utils/constraints";
+import { coerceArgsToSchema } from "../utils/coerce-args";
 import type {
   AgentCapabilityGrant,
   AgentSession,
@@ -176,11 +177,13 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
             };
           }
 
+          // Coerce to the capability's declared input types so stringified
+          // numbers/booleans from LLM tool calls match numeric constraints and
+          // reach onExecute correctly typed (mirrors single execute).
+          const args = coerceArgsToSchema(req.arguments, capDef.input);
+
           const capGrants = dbGrantsMap.get(req.capability);
-          const constraintArgs = (req.arguments ?? {}) as Record<
-            string,
-            ConstraintPrimitive | undefined
-          >;
+          const constraintArgs = (args ?? {}) as Record<string, ConstraintPrimitive | undefined>;
           const activeGrant = capGrants ? findMatchingGrant(capGrants, constraintArgs) : undefined;
           if (!activeGrant) {
             const hasAnyGrant = capGrants && capGrants.length > 0;
@@ -212,7 +215,7 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
               ctx,
               capability: req.capability,
               capabilityDef: capDef,
-              arguments: req.arguments,
+              arguments: args,
               agentSession,
               grant: activeGrant,
               revokeGrant,
@@ -230,7 +233,7 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
                 hostId: agentSession.agent.hostId,
                 userId: agentSession.host?.userId ?? undefined,
                 agentName: agentSession.agent.name,
-                arguments: req.arguments,
+                arguments: args,
                 status: "error",
                 error: execError,
                 durationMs,
@@ -261,7 +264,7 @@ export function batchExecuteCapability(opts: ResolvedAgentAuthOptions) {
               hostId: agentSession.agent.hostId,
               userId: agentSession.host?.userId ?? undefined,
               agentName: agentSession.agent.name,
-              arguments: req.arguments,
+              arguments: args,
               status: "success",
               durationMs,
             },
