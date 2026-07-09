@@ -3,7 +3,7 @@ import { createFromOpenAPI } from "@better-auth/agent-auth/openapi";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { genericOAuth, anonymous } from "better-auth/plugins";
+import { genericOAuth, anonymous, bearer } from "better-auth/plugins";
 import {
   db,
   schema,
@@ -311,5 +311,15 @@ export const auth = betterAuth({
         }
       },
     }),
+    // Lets the desktop companion app authenticate API calls with
+    // `Authorization: Bearer <session-token>` instead of cookies.
+    bearer(),
+  ],
+  trustedOrigins: [
+    // The Agent Auth desktop companion app (custom protocol + fetch origin).
+    "better-auth-desktop://*",
+    "agent-auth://*",
+    ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ??
+      []),
   ],
 });

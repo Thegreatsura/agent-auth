@@ -35,6 +35,17 @@ function Spinner() {
   );
 }
 
+/**
+ * Reads an optional `callbackURL` from the current URL, used by the desktop
+ * companion sign-in (`/desktop-auth`) to return here after OAuth. Only relative
+ * paths are honored, to avoid open-redirects.
+ */
+function getReturnUrl(): string {
+  if (typeof window === "undefined") return "/dashboard";
+  const cb = new URLSearchParams(window.location.search).get("callbackURL");
+  return cb && cb.startsWith("/") ? cb : "/dashboard";
+}
+
 export default function Home() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
@@ -42,7 +53,7 @@ export default function Home() {
 
   useEffect(() => {
     if (session) {
-      router.push("/dashboard");
+      router.push(getReturnUrl());
     }
   }, [session, router]);
 
@@ -50,7 +61,7 @@ export default function Home() {
     setSigningIn(true);
     await signIn.oauth2({
       providerId: "vercel-mcp",
-      callbackURL: "/dashboard",
+      callbackURL: getReturnUrl(),
     });
   };
 
