@@ -404,6 +404,8 @@ export default function AgentsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Record<string, "details" | "activity">>({});
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
   const [availableCaps, setAvailableCaps] = useState<{ name: string; description: string }[]>([]);
   const [selectedCaps, setSelectedCaps] = useState<Set<string>>(new Set());
@@ -489,8 +491,37 @@ export default function AgentsPage() {
     }
   };
 
+  const handleRevokeAll = async () => {
+    const activeAgents = agents.filter((a) => a.status === "active");
+    if (activeAgents.length === 0) return;
+    setRevokingAll(true);
+    setConfirmRevokeAll(false);
+    const revoked = await Promise.allSettled(
+      activeAgents.map((a) =>
+        fetch("/api/auth/agent/revoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ agent_id: a.agent_id }),
+        }).then((res) => {
+          if (!res.ok) throw new Error(a.agent_id);
+          return a.agent_id;
+        }),
+      ),
+    );
+    const revokedIds = new Set(
+      revoked
+        .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+        .map((r) => r.value),
+    );
+    setAgents((prev) =>
+      prev.map((a) => (revokedIds.has(a.agent_id) ? { ...a, status: "revoked" } : a)),
+    );
+    setRevokingAll(false);
+  };
+
   const filters = ["all", "active", "pending", "rejected", "expired", "revoked"];
   const filteredCount = agents.length;
+  const activeCount = agents.filter((a) => a.status === "active").length;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-8">
@@ -520,6 +551,39 @@ export default function AgentsPage() {
             ))}
           </div>
         </div>
+
+        {!loading && activeCount > 0 && (
+          <div className="flex items-center justify-end -mt-2">
+            {confirmRevokeAll ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted">
+                  Revoke {activeCount} active agent{activeCount !== 1 ? "s" : ""}?
+                </span>
+                <button
+                  onClick={handleRevokeAll}
+                  disabled={revokingAll}
+                  className="cursor-pointer rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-[11px] font-medium text-red-400 transition-all hover:bg-red-500/15 disabled:opacity-50"
+                >
+                  {revokingAll ? "Revoking..." : "Confirm"}
+                </button>
+                <button
+                  onClick={() => setConfirmRevokeAll(false)}
+                  disabled={revokingAll}
+                  className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-[11px] font-medium text-muted transition-colors hover:text-foreground disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmRevokeAll(true)}
+                className="cursor-pointer rounded-lg border border-red-500/15 bg-red-500/5 px-3 py-1.5 text-[11px] font-medium text-red-400 transition-all hover:bg-red-500/10 hover:border-red-500/25"
+              >
+                Revoke all agents
+              </button>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
