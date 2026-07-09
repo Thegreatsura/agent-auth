@@ -3,7 +3,7 @@ import type { Capability } from "@better-auth/agent-auth";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { genericOAuth, anonymous } from "better-auth/plugins";
+import { genericOAuth, anonymous, bearer } from "better-auth/plugins";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
 import { getSetting, insertLog } from "./db";
@@ -915,10 +915,20 @@ export const auth = betterAuth({
         ).catch(() => {});
       },
     }),
+    // Lets the desktop companion app authenticate API calls with
+    // `Authorization: Bearer <session-token>` instead of cookies.
+    bearer(),
   ],
   trustedOrigins: (request) => {
     const origin = request?.headers?.get("origin") ?? "";
     if (origin.startsWith("chrome-extension://")) return [origin];
+    // The Agent Auth desktop companion app (custom protocol + fetch origin).
+    if (
+      origin.startsWith("better-auth-desktop://") ||
+      origin.startsWith("agent-auth://")
+    ) {
+      return [origin];
+    }
     return [];
   },
 });
