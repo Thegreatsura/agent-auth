@@ -275,6 +275,15 @@ export class AgentAuthClient {
     return result;
   }
 
+
+  private async loadAllCapabilities(provider: string): Promise<void> {
+    let cursor: string | undefined;
+    do {
+      const page = await this.listCapabilities({ provider, cursor, limit: 200 });
+      cursor = page.has_more ? (page.next_cursor ?? undefined) : undefined;
+    } while (cursor);
+  }
+
   /**
    * Describe a single capability — returns the full definition
    * including input schema. Use when the agent needs to look up
@@ -350,9 +359,7 @@ export class AgentAuthClient {
     const needsCaps = cachedConfigs.filter((c) => !c.capabilities?.length);
     if (needsCaps.length > 0) {
       await Promise.allSettled(
-        needsCaps.map((config) =>
-          this.listCapabilities({ provider: config.issuer }).catch(() => {}),
-        ),
+        needsCaps.map((config) => this.loadAllCapabilities(config.issuer).catch(() => {})),
       );
       const refreshed = await this.storage.listProviderConfigs();
       for (const config of refreshed) {
@@ -364,7 +371,8 @@ export class AgentAuthClient {
       }
     }
 
-    if (scored.length < limit && this.directoryUrl) {
+
+    if (this.directoryUrl) {
       try {
         const directoryConfigs = await searchDirectoryFull(this.directoryUrl, query, {
           fetchFn: this.fetchFn,
@@ -378,9 +386,7 @@ export class AgentAuthClient {
         }
         if (newConfigs.length > 0) {
           await Promise.allSettled(
-            newConfigs.map((config) =>
-              this.listCapabilities({ provider: config.issuer }).catch(() => {}),
-            ),
+            newConfigs.map((config) => this.loadAllCapabilities(config.issuer).catch(() => {})),
           );
           for (const config of newConfigs) {
             const updated = await this.storage.getProviderConfig(config.issuer);
