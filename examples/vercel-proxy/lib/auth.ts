@@ -17,7 +17,8 @@ import {
 
 const VERCEL_OPENAPI_URL =
   "https://spec.speakeasy.com/vercel/vercel-docs/vercel-oas-with-code-samples";
-const VERCEL_MCP_CLIENT_ID = process.env.VERCEL_MCP_CLIENT_ID as string;
+const VERCEL_CLIENT_ID = process.env.VERCEL_CLIENT_ID as string;
+const VERCEL_CLIENT_SECRET = process.env.VERCEL_CLIENT_SECRET as string;
 const VERCEL_MCP_REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/callback`;
 const VERCEL_MASTER_API_KEY = process.env.VERCEL_MASTER_API_KEY as string;
 const [vercelSpec] = await Promise.all([
@@ -148,19 +149,21 @@ export const auth = betterAuth({
       config: [
         {
           providerId: "vercel-mcp",
-          clientId: VERCEL_MCP_CLIENT_ID,
+          clientId: VERCEL_CLIENT_ID,
+          clientSecret: VERCEL_CLIENT_SECRET,
           redirectURI: `${process.env.BETTER_AUTH_URL}/callback`,
           authorizationUrl: "https://vercel.com/oauth/authorize",
           tokenUrl: "https://api.vercel.com/login/oauth/token",
           scopes: ["openid", "email", "profile", "offline_access"],
           pkce: true,
           prompt: "consent",
-          // Public client (token_endpoint_auth_method = "none"): the token
-          // exchange is authenticated with PKCE alone — no client_secret.
+          // Confidential client (token_endpoint_auth_method = "client_secret_post"):
+          // the token exchange is authenticated with client_id + client_secret.
           getToken: async ({ code, codeVerifier }) => {
             const params = new URLSearchParams({
               grant_type: "authorization_code",
-              client_id: VERCEL_MCP_CLIENT_ID,
+              client_id: VERCEL_CLIENT_ID,
+              client_secret: VERCEL_CLIENT_SECRET,
               code,
               redirect_uri: VERCEL_MCP_REDIRECT_URI,
             });
