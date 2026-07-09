@@ -275,7 +275,6 @@ export class AgentAuthClient {
     return result;
   }
 
-
   private async loadAllCapabilities(provider: string): Promise<void> {
     let cursor: string | undefined;
     do {
@@ -370,7 +369,6 @@ export class AgentAuthClient {
         scoreConfig(config, "cache");
       }
     }
-
 
     if (this.directoryUrl) {
       try {

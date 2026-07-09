@@ -923,10 +923,7 @@ export const auth = betterAuth({
     const origin = request?.headers?.get("origin") ?? "";
     if (origin.startsWith("chrome-extension://")) return [origin];
     // The Agent Auth desktop companion app (custom protocol + fetch origin).
-    if (
-      origin.startsWith("better-auth-desktop://") ||
-      origin.startsWith("agent-auth://")
-    ) {
+    if (origin.startsWith("better-auth-desktop://") || origin.startsWith("agent-auth://")) {
       return [origin];
     }
     return [];

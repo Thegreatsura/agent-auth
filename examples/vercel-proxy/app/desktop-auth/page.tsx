@@ -31,8 +31,7 @@ export default async function DesktopAuthPage({
     query: { disableCookieCache: true, disableRefresh: true },
   });
 
-  const isAnonymous = (session?.user as { isAnonymous?: boolean } | undefined)
-    ?.isAnonymous;
+  const isAnonymous = (session?.user as { isAnonymous?: boolean } | undefined)?.isAnonymous;
 
   if (!session?.user || isAnonymous) {
     // Send them through the OAuth sign-in, then come straight back here so we

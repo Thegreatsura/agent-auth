@@ -52,10 +52,7 @@ export function DesktopAuthRedirect({
           </p>
           <p className="mb-6 text-xs text-muted">
             If the app didn&apos;t open automatically,{" "}
-            <a
-              href={callbackUrl}
-              className="underline underline-offset-2 hover:text-foreground"
-            >
+            <a href={callbackUrl} className="underline underline-offset-2 hover:text-foreground">
               click here
             </a>
             .

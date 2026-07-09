@@ -319,7 +319,8 @@ export const auth = betterAuth({
     // The Agent Auth desktop companion app (custom protocol + fetch origin).
     "better-auth-desktop://*",
     "agent-auth://*",
-    ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ??
-      []),
+    ...(process.env.TRUSTED_ORIGINS?.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean) ?? []),
   ],
 });
